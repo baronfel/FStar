@@ -32,6 +32,8 @@ open FStar.SMTEncoding.Util
 module BU = FStar.Util
 module U = FStar.Syntax.Util
 module TcUtil = FStar.TypeChecker.Util
+module Print = FStar.Syntax.Print
+module Env = FStar.TypeChecker.Env
 
 (****************************************************************************)
 (* Hint databases for record and replay (private)                           *)
@@ -46,29 +48,24 @@ let z3_result_as_replay_result = function
     | Inr (r, _) -> Inr r
 let recorded_hints : ref<(option<hints>)> = BU.mk_ref None
 let replaying_hints: ref<(option<hints>)> = BU.mk_ref None
-let format_hints_file_name src_filename checking_or_using_extracted_interface =
-  BU.format1 "%s.hints" (if checking_or_using_extracted_interface then Parser.Dep.interface_filename src_filename else src_filename)
+let format_hints_file_name src_filename = BU.format1 "%s.hints" src_filename
 
 (****************************************************************************)
 (* Hint databases (public)                                                  *)
 (****************************************************************************)
-let initialize_hints_db src_filename checking_or_using_extracted_interface format_filename : unit =
+let initialize_hints_db src_filename format_filename : unit =
     if Options.record_hints() then recorded_hints := Some [];
     if Options.use_hints()
     then let norm_src_filename = BU.normalize_file_path src_filename in
-         let src_filename_for_printing =
-           if checking_or_using_extracted_interface then Parser.Dep.interface_filename norm_src_filename
-           else norm_src_filename
-         in
          let val_filename = match Options.hint_file() with
                             | Some fn -> fn
-                            | None -> (format_hints_file_name norm_src_filename checking_or_using_extracted_interface) in
+                            | None -> (format_hints_file_name norm_src_filename) in
          begin match BU.read_hints val_filename with
             | Some hints ->
                 let expected_digest = BU.digest_of_file norm_src_filename in
                 if Options.hint_info()
                 then begin
-                    BU.print3 "(%s) digest is %s%s.\n" src_filename_for_printing
+                    BU.print3 "(%s) digest is %s%s.\n" norm_src_filename
                         (if hints.module_digest = expected_digest
                          then "valid; using hints"
                          else "invalid; using potentially stale hints")
@@ -79,10 +76,10 @@ let initialize_hints_db src_filename checking_or_using_extracted_interface forma
                 replaying_hints := Some hints.hints
             | None ->
                 if Options.hint_info()
-                then BU.print1 "(%s) Unable to read hint file.\n" src_filename_for_printing
+                then BU.print1 "(%s) Unable to read hint file.\n" norm_src_filename
          end
 
-let finalize_hints_db src_filename checking_or_using_extracted_interface : unit =
+let finalize_hints_db src_filename :unit =
     begin if Options.record_hints () then
           let hints = Option.get !recorded_hints in
           let hints_db = {
@@ -92,18 +89,18 @@ let finalize_hints_db src_filename checking_or_using_extracted_interface : unit 
           let norm_src_filename = BU.normalize_file_path src_filename in
           let val_filename = match Options.hint_file() with
                             | Some fn -> fn
-                            | None -> (format_hints_file_name norm_src_filename checking_or_using_extracted_interface) in
+                            | None -> (format_hints_file_name norm_src_filename) in
           BU.write_hints val_filename hints_db
     end;
     recorded_hints := None;
     replaying_hints := None
 
-let with_hints_db fname checking_or_using_extracted_interface f =
-    initialize_hints_db fname checking_or_using_extracted_interface false;
+let with_hints_db fname f =
+    initialize_hints_db fname false;
     let result = f () in
     // for the moment, there should be no need to trap exceptions to finalize the hints db
     // no cleanup needs to occur if an error occurs.
-    finalize_hints_db fname checking_or_using_extracted_interface;
+    finalize_hints_db fname;
     result
 
 let filter_using_facts_from (e:env) (theory:decls_t) =
@@ -252,7 +249,8 @@ let detail_hint_replay settings z3result =
          | _failed ->
            let ask_z3 label_assumptions =
                let res = BU.mk_ref None in
-               Z3.ask (filter_assertions settings.query_env settings.query_hint)
+               Z3.ask settings.query_range
+                      (filter_assertions settings.query_env settings.query_hint)
                       settings.query_hash
                       settings.query_all_labels
                       (with_fuel_and_diagnostics settings label_assumptions)
@@ -268,26 +266,7 @@ let find_localized_errors errs =
 let has_localized_errors errs = Option.isSome (find_localized_errors errs)
 
 let report_errors settings : unit =
-    if Options.detail_errors()
-    && Options.n_cores() = 1
-    then let initial_fuel = {
-                settings with query_fuel=Options.initial_fuel();
-                              query_ifuel=Options.initial_ifuel();
-                              query_hint=None
-            }
-         in
-         let ask_z3 label_assumptions =
-            let res = BU.mk_ref None in
-            Z3.ask (filter_facts_without_core settings.query_env)
-                    settings.query_hash
-                    settings.query_all_labels
-                    (with_fuel_and_diagnostics initial_fuel label_assumptions)
-                    None
-                    (fun r -> res := Some r);
-            Option.get (!res)
-            in
-         detail_errors false settings.query_env settings.query_all_labels ask_z3
-    else begin
+    let _basic_error_report =
         match find_localized_errors settings.query_errors with
         | Some err ->
           settings.query_errors |> List.iter (fun e ->
@@ -302,7 +281,27 @@ let report_errors settings : unit =
                    settings.query_env
                    [(Errors.Error_UnknownFatal_AssertionFailure, BU.format1 "Unknown assertion failed (%s)" err_detail,
                      settings.query_range)]
-    end
+    in
+    if Options.detail_errors()
+    && Options.n_cores() = 1
+    then let initial_fuel = {
+                settings with query_fuel=Options.initial_fuel();
+                              query_ifuel=Options.initial_ifuel();
+                              query_hint=None
+            }
+         in
+         let ask_z3 label_assumptions =
+            let res = BU.mk_ref None in
+            Z3.ask  settings.query_range
+                    (filter_facts_without_core settings.query_env)
+                    settings.query_hash
+                    settings.query_all_labels
+                    (with_fuel_and_diagnostics initial_fuel label_assumptions)
+                    None
+                    (fun r -> res := Some r);
+            Option.get (!res)
+            in
+         detail_errors false settings.query_env settings.query_all_labels ask_z3
 
 let query_info settings z3result =
     if Options.hint_info()
@@ -397,9 +396,9 @@ let ask_and_report_errors env all_labels prefix query suffix =
 
     let default_settings, next_hint =
         let qname, index =
-            match env.qname_and_index with
-            | None -> failwith "No query name set!"
-            | Some (q, n) -> Ident.text_of_lid q, n
+            match env.qtbl_name_and_index with
+            | _, None -> failwith "No query name set!"
+            | _, Some (q, n) -> Ident.text_of_lid q, n
         in
         let rlimit =
             Prims.op_Multiply
@@ -475,7 +474,8 @@ let ask_and_report_errors env all_labels prefix query suffix =
 
     let check_one_config config (k:z3result -> unit) : unit =
           if used_hint config || Options.z3_refresh() then Z3.refresh();
-          Z3.ask (filter_assertions config.query_env config.query_hint)
+          Z3.ask config.query_range
+                  (filter_assertions config.query_env config.query_hint)
                   config.query_hash
                   config.query_all_labels
                   (with_fuel_and_diagnostics config [])
@@ -502,6 +502,14 @@ let ask_and_report_errors env all_labels prefix query suffix =
 
 let solve use_env_msg tcenv q : unit =
     Encode.push (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
+    if Options.no_smt ()
+    then
+        FStar.TypeChecker.Err.add_errors
+                 tcenv
+                 [(Errors.Error_NoSMTButNeeded,
+                    BU.format1 "Q = %s\nA query could not be solved internally, and --no_smt was given" (Print.term_to_string q),
+                        tcenv.range)]
+    else
     let tcenv = incr_query_index tcenv in
     let prefix, labels, qry, suffix = Encode.encode_query use_env_msg tcenv q in
     let pop () = Encode.pop (BU.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
@@ -522,6 +530,8 @@ let solver = {
     init=Encode.init;
     push=Encode.push;
     pop=Encode.pop;
+    snapshot=Encode.snapshot;
+    rollback=Encode.rollback;
     encode_sig=Encode.encode_sig;
     encode_modul=Encode.encode_modul;
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
@@ -533,6 +543,8 @@ let dummy = {
     init=(fun _ -> ());
     push=(fun _ -> ());
     pop=(fun _ -> ());
+    snapshot=(fun _ -> (0, 0, 0), ());
+    rollback=(fun _ _ -> ());
     encode_sig=(fun _ _ -> ());
     encode_modul=(fun _ _ -> ());
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);

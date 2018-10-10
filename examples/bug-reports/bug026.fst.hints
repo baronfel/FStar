@@ -8,28 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "ef7e4339f82e4bbcc91d7a3c72be3d9d"
-    ],
-    [
-      "Bug026.bar",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Bug026_Tm_refine_908043d23d9b610a14feef808af9da3d"
-      ],
-      0,
-      "e98a9bc263632a79912e91a130955c6b"
-    ],
-    [
-      "Bug026.evenb",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "e2c55cc754a2f7b29a8bc10ea1ef3237"
+      "df4efff867e1b438e39718125ffe8a80"
     ],
     [
       "Bug026.filter",
@@ -40,11 +19,10 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "4315d7edce2c1e02b85d1593ea222cee"
+      "cb208486429d5bd1199a4627a39b7b8b"
     ],
     [
       "Bug026.test_filter1",
@@ -52,13 +30,15 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int",
-        "assumption_Prims.list_haseq", "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
         "function_token_typing_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "4392edb73be831f1d0e85c144aa7ce92"
+      "e092525fb48ff66f0155c873ae34473d"
     ],
     [
       "Bug026.test_filter1",
@@ -81,16 +61,7 @@
         "token_correspondence_Bug026.evenb"
       ],
       0,
-      "c4d297fd8674b1d51bf7a229e0076b12"
-    ],
-    [
-      "Bug026.evenb2",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "74c06b390c4290362c89c7a503c69c39"
+      "cd5f6cb276720c28dc4ea9058b37eb00"
     ],
     [
       "Bug026.test_filter2",
@@ -98,13 +69,15 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int",
-        "assumption_Prims.list_haseq", "equation_Prims.pos",
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
+        "equation_Prims.pos", "function_token_typing_Prims.int",
         "function_token_typing_Prims.pos",
-        "haseqPrims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+        "haseqPrims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "fb9f89ecc26649797f7a89c80c96d8e2"
+      "fb72565d49b473ea31c60c447414149d"
     ],
     [
       "Bug026.test_filter2",
@@ -127,16 +100,7 @@
         "token_correspondence_Bug026.evenb2"
       ],
       0,
-      "5146a527736765ad4a0bf3b6fc7de20e"
-    ],
-    [
-      "Bug026.evenb3",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "d9a4a76d0cc7c0b149c1c0e05bd807e5"
+      "92527677cef12c3b597adabae82c1e27"
     ],
     [
       "Bug026.test_filter3",
@@ -144,13 +108,15 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int",
-        "assumption_Prims.list_haseq", "equation_Prims.pos",
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
+        "equation_Prims.pos", "function_token_typing_Prims.int",
         "function_token_typing_Prims.pos",
-        "haseqPrims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+        "haseqPrims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "a1511ea9af4da3b6e1bef4a77b55d2a2"
+      "0e193953ab740e4c75cbbc5b10cfc970"
     ],
     [
       "Bug026.test_filter3",
@@ -173,7 +139,7 @@
         "token_correspondence_Bug026.evenb3"
       ],
       0,
-      "7ebe7b74b1345ab3b70533a1d84b7257"
+      "1c70e8d8b8745909f4ca0004fdbf49e4"
     ]
   ]
 ]

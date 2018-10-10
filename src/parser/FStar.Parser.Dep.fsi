@@ -27,15 +27,15 @@ val hard_coded_dependencies : string -> list<(lident * open_kind)>
 
 val is_interface: string -> bool
 val is_implementation: string -> bool
-val interface_filename: string -> string
 
 type deps
 val empty_deps : deps
-val check_or_use_extracted_interface: list<string> -> string -> bool
-val cache_file_name: list<string> -> string -> string
-val all_cmd_line_files: deps -> list<string>
+val cache_file_name: string -> string
 val collect: list<string> -> list<string> * deps
 val deps_of : deps -> string -> list<string>
 val print : deps -> unit
 val hash_dependences: deps -> string -> option<(list<(string*string)>)>
 val print_digest: list<(string * string)> -> string
+val module_has_interface: deps -> module_name:Ident.lident -> bool
+val deps_has_implementation: deps -> module_name:Ident.lident -> bool
+val print_raw: deps -> unit

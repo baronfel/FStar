@@ -1,0 +1,41 @@
+[
+  "µež\u000bŽ‘C\u001f[£À=8\u000bn»",
+  [
+    [
+      "Splice2.uu___64",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Splice.x" ],
+      0,
+      "901f8998f061bd08c8522cbbb1a5e82a"
+    ],
+    [
+      "Splice2.uu___65",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Splice.y" ],
+      0,
+      "8e74ddfa95f189b7e9fe162c2ccb67a8"
+    ],
+    [
+      "Splice2.uu___64",
+      2,
+      2,
+      1,
+      [ "@query", "equation_Splice.x" ],
+      0,
+      "3707b059fa25760cb2e2348294cdada9"
+    ],
+    [
+      "Splice2.uu___65",
+      2,
+      2,
+      1,
+      [ "@query", "equation_Splice.y" ],
+      0,
+      "6191ceef929b0f46d133f753f6c99736"
+    ]
+  ]
+]

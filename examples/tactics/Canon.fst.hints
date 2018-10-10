@@ -1,5 +1,5 @@
 [
-  "?[π\\\u000eï\u000bÑÂHÖÅM2Õ⁄",
+  "J(\tÑ≠\u0011\rd)Jó-LÂ¯",
   [
     [
       "Canon.lem1",
@@ -7,30 +7,58 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
-        "projection_inverse_BoxInt_proj_0"
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "b413062e764cfa1ba644b75017fa0bac"
+      "7ddf59aaabce4ea03688e8aaf1ebec50"
     ],
     [
       "Canon.lem8",
       1,
       2,
       1,
-      [ "@query" ],
+      [ "@query", "true_interp" ],
       0,
-      "8cfab36f7f4894de92a618c654bf003b"
+      "3fffc8bd23e2f6e5f71c40190f55daf5"
     ],
     [
-      "Canon.lem9",
+      "Canon.check_canon",
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
+        "disc_equation_FStar.Tactics.Result.Failed",
+        "disc_equation_FStar.Tactics.Result.Success",
+        "equation_Prims.eqtype", "function_token_typing_Prims.unit",
+        "lemma_FStar.Tactics.Result.result_split",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
       0,
-      "5f799b5a8d30de37e0eb3e2e785cbf91"
+      "cf5718ddd92189f357ded07a28bfeedb"
+    ],
+    [
+      "Canon.lem1",
+      2,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "a4af6bb1cb60fe3f49d13630c9d31a8b"
+    ],
+    [
+      "Canon.lem8",
+      2,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "7a7561b1f62f6b6b805023a7aa3ad611"
     ]
   ]
 ]

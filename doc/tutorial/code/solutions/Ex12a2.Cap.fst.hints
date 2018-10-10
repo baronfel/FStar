@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
       0,
-      "bdda44615d7f51fa8afed3efdf0cfb40"
+      "f3669b45e65c489c8900392c8c1c30b4"
     ],
     [
       "Ex12a2.Cap.issue_read",
@@ -18,29 +18,28 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "assumption_Ex12a2.Cap.UTF8_inj", "bool_inversion",
+        "assumption_Ex12a2.Cap.UTF8_inj", "bool_inversion", "bool_typing",
         "equation_Ex12.MAC.key_entry", "equation_Ex12.MAC.key_prop",
         "equation_Ex12.MAC.pkey", "equation_Ex12.MAC.pred_to_dec_ghost",
         "equation_Ex12.SHA1.text", "equation_Ex12a.ACLs.canRead",
         "equation_Ex12a.ACLs.filename", "equation_Ex12a2.Cap.capRead",
-        "equation_Platform.Bytes.bytes",
+        "equation_Platform.Bytes.bytes", "equation_Prims.logical",
         "function_token_typing_Ex12a2.Cap.capRead",
         "function_token_typing_Ex12a2.Cap.k_read",
-        "function_token_typing_Platform.Bytes.bytes",
         "interpretation_Ex12.MAC_Tm_abs_97c0e073b8cc174491198c8e97c1e166",
-        "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Ex12.MAC_Tm_refine_572b7c2b1bdf079fa791115963523fc8",
         "refinement_interpretation_Ex12a2.Cap_Tm_refine_47fc00d9af5452fdc3a5434abc5c3970",
         "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
         "refinement_interpretation_Platform.Bytes_Tm_refine_ad9cde64c932cdae765806f65e24e93b",
-        "string_inversion", "token_correspondence_Ex12a2.Cap.capRead",
-        "typing_Ex12.MAC.pred_to_dec_ghost", "typing_Ex12a.ACLs.canRead",
-        "typing_Ex12a2.Cap.capRead",
+        "string_inversion",
+        "typing_Ex12.MAC_Tm_abs_97c0e073b8cc174491198c8e97c1e166",
+        "typing_Ex12a.ACLs.canRead", "typing_Ex12a2.Cap.capRead",
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
         "typing_Platform.Bytes.equalBytes", "typing_Platform.Bytes.utf8"
       ],
       0,
-      "a806d429a5af74be2e90f852abb759c0"
+      "9a2ac69a1aba8c6bb76dd572a55ce770"
     ],
     [
       "Ex12a2.Cap.redeem_read",
@@ -54,7 +53,7 @@
         "string_inversion"
       ],
       0,
-      "19d8936ceaefc2d61e0110b6aa740a2b"
+      "6aa1d24a83e7f2999055db63d1cdf2a4"
     ],
     [
       "Ex12a2.Cap.capWrite",
@@ -63,7 +62,7 @@
       1,
       [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
       0,
-      "95d4f6863d663975ad2f6e7b215a15e0"
+      "5f723590f8ef1ea2baa4a94b5875f929"
     ],
     [
       "Ex12a2.Cap.issue_write",
@@ -72,30 +71,30 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "assumption_Ex12a2.Cap.UTF8_inj", "bool_inversion",
+        "assumption_Ex12a2.Cap.UTF8_inj", "bool_inversion", "bool_typing",
         "equation_Ex12.MAC.key_entry", "equation_Ex12.MAC.key_prop",
         "equation_Ex12.MAC.pkey", "equation_Ex12.MAC.pred_to_dec_ghost",
         "equation_Ex12.SHA1.text", "equation_Ex12a.ACLs.canWrite",
-        "equation_Ex12a.ACLs.filename", "equation_Ex12a2.Cap.capWrite",
-        "equation_Platform.Bytes.bytes",
+        "equation_Ex12a.ACLs.filename", "equation_Ex12a.ACLs.tmp",
+        "equation_Ex12a2.Cap.capWrite", "equation_Platform.Bytes.bytes",
+        "equation_Prims.logical", "function_token_typing_Ex12a.ACLs.tmp",
         "function_token_typing_Ex12a2.Cap.capWrite",
         "function_token_typing_Ex12a2.Cap.k_write",
-        "function_token_typing_Platform.Bytes.bytes",
         "interpretation_Ex12.MAC_Tm_abs_97c0e073b8cc174491198c8e97c1e166",
-        "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Ex12.MAC_Tm_refine_572b7c2b1bdf079fa791115963523fc8",
         "refinement_interpretation_Ex12a2.Cap_Tm_refine_0ba285f5db2ebbbd14f4a10a0e23206e",
         "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
         "refinement_interpretation_Platform.Bytes_Tm_refine_ad9cde64c932cdae765806f65e24e93b",
-        "string_inversion", "token_correspondence_Ex12a2.Cap.capWrite",
-        "typing_Ex12.MAC.pred_to_dec_ghost", "typing_Ex12a.ACLs.canWrite",
-        "typing_Ex12a2.Cap.capWrite",
+        "typing_Ex12.MAC_Tm_abs_97c0e073b8cc174491198c8e97c1e166",
+        "typing_Ex12a.ACLs.canWrite", "typing_Ex12a2.Cap.capWrite",
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
         "typing_Platform.Bytes.equalBytes", "typing_Platform.Bytes.utf8"
       ],
       0,
-      "bcf5f3f6ee43b19e04bcd04fde468daa"
+      "b12eee2d30d82735c6d9e067c8e264c6"
     ],
     [
       "Ex12a2.Cap.redeem_write",
@@ -109,7 +108,25 @@
         "string_inversion"
       ],
       0,
-      "bb6b249fea3c4beb6e61558be3691473"
+      "317a6b12745a53c73cbbc8c013973a80"
+    ],
+    [
+      "Ex12a2.Cap.capRead",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
+      0,
+      "594d814c579e9eceba7ec3c247efa9f8"
+    ],
+    [
+      "Ex12a2.Cap.capWrite",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
+      0,
+      "1e0e11dc0631d1bad1488fbc59be1520"
     ]
   ]
 ]

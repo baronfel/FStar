@@ -35,6 +35,7 @@ open FStar.Const
 open FStar.String
 open FStar.Ident
 open FStar.Errors
+
 module Const = FStar.Parser.Const
 module BU = FStar.Util
 
@@ -80,9 +81,6 @@ let is_interface (f: string): bool =
 let is_implementation f =
   not (is_interface f)
 
-let interface_filename (f:string) :string =
-  if is_interface f then f
-  else check_and_strip_suffix f |> must |> (fun x -> x ^ ".fsti")
 
 let list_of_option = function Some x -> [x] | None -> []
 
@@ -94,7 +92,7 @@ let module_name_of_file f =
     | Some longname ->
       longname
     | None ->
-      raise_err (Errors.Fatal_NotValidFStarFile, (Util.format1 "not a valid FStar file: %s\n" f))
+      raise_err (Errors.Fatal_NotValidFStarFile, (Util.format1 "not a valid FStar file: %s" f))
 
 let lowercase_module_name f = String.lowercase (module_name_of_file f)
 
@@ -110,6 +108,12 @@ type dependence =
     | UseInterface of module_name
     | PreferInterface of module_name
     | UseImplementation of module_name
+    | FriendImplementation of module_name
+let dep_to_string = function
+    | UseInterface f -> "UseInterface " ^ f
+    | PreferInterface f -> "PreferInterface " ^ f
+    | UseImplementation f -> "UseImplementation " ^ f
+    | FriendImplementation f -> "UseImplementation " ^ f
 type dependences = list<dependence>
 let empty_dependences = []
 type dependence_graph = //maps file names to the modules it depends on
@@ -118,17 +122,18 @@ type deps =
      | Mk of dependence_graph      //dependences of the entire project, not just those reachable from the command line
            * files_for_module_name //an abstraction of the file system
            * list<file_name>       //all command-line files
+           * list<file_name>       //all files
 let deps_try_find (Deps m) k = BU.smap_try_find m k
 let deps_add_dep (Deps m) k v = BU.smap_add m k v
 let deps_keys (Deps m) = BU.smap_keys m
 let deps_empty () = Deps (BU.smap_create 41)
-let empty_deps = Mk (deps_empty (), BU.smap_create 0, [])
-let all_cmd_line_files = fun (Mk (_, _, fns)) -> fns
+let empty_deps = Mk (deps_empty (), BU.smap_create 0, [], [])
 
 let module_name_of_dep = function
     | UseInterface m
     | PreferInterface m
-    | UseImplementation m -> m
+    | UseImplementation m
+    | FriendImplementation m -> m
 
 let resolve_module_name (file_system_map:files_for_module_name) (key:module_name)
     : option<module_name>
@@ -157,33 +162,7 @@ let has_implementation (file_system_map:files_for_module_name) (key:module_name)
     : bool =
     Option.isSome (implementation_of file_system_map key)
 
-(*
- * If --check_interface is set, we check extracted fsti of all files in the dependence graph and the one we are verifying
- * If --use_extracted_interfaces is set, then we load/check extracted depepndency.fsti
- *
- * The definition of dependency in this function is a file not passed on the command line
- * We must already make sure that there was only one command line file in case one of these flags is set
- *)
-let check_or_use_extracted_interface all_cmd_line_files fn =
-  if is_interface fn then false
-  else
-    let is_cmd_line_fn = List.contains fn all_cmd_line_files in
-    Options.check_interface () ||  //check_interface implies use_extracted_interfaces also
-    (Options.use_extracted_interfaces () && (not is_cmd_line_fn))
-
-(*
- * This function is called by the dependency analysis and the main typechecker
- * In the case of dependency analysis, the analysis knows which file is a dependency, and which is not
- *   and so, this function leaves it to the caller to change fn to interface fn if required
- *
- * For the main typechecker flow, we will use check_or_use_extracted_interface to use .fsti if need be
- *)
-let cache_file_name all_cmd_line_files fn =
-  let fn =
-    if Options.dep () <> None then fn  //if --dep is set, that code is required to manipulate fn itself, we can't rely on command line files in case of a --dep invocation
-    else if check_or_use_extracted_interface all_cmd_line_files fn then interface_filename fn
-    else fn
-  in
+let cache_file_name fn =
   FStar.Options.prepend_cache_dir
     (if Options.lax()
      then fn ^ ".checked.lax"
@@ -201,11 +180,7 @@ let file_of_dep_aux
            is_implementation fn &&
            key = lowercase_module_name fn)
     in
-    let maybe_add_suffix f =  //f is a dependency, if --use_extracted_interfaces is set, then we will convert f to its interface name
-      if use_checked_file
-      then cache_file_name all_cmd_line_files (if Options.dep () <> None && Options.use_extracted_interfaces () then (interface_filename f) else f)
-      else f
-    in
+    let maybe_add_suffix f = if use_checked_file then cache_file_name f else f in
     match d with
     | UseInterface key ->
       //This key always resolves to an interface source file
@@ -214,7 +189,7 @@ let file_of_dep_aux
          assert false; //should be unreachable; see the only use of UseInterface in discover_one
          raise_err (Errors.Fatal_MissingInterface, BU.format1 "Expected an interface for module %s, but couldn't find one" key)
        | Some f ->
-         if use_checked_file then FStar.Options.prepend_cache_dir (f ^ ".source") else f)
+         f)
 
     | PreferInterface key //key for module 'a'
         when has_interface file_system_map key ->  //so long as 'a.fsti' exists
@@ -222,15 +197,19 @@ let file_of_dep_aux
       && Option.isNone (Options.dep()) //and we're not just doing a dependency scan using `--dep _`
       then if Options.expose_interfaces()
            then maybe_add_suffix (Option.get (implementation_of file_system_map key))
-           else raise_err (Errors.Fatal_MissingExposeInterfacesOption, BU.format2 "Invoking fstar with %s on the command line breaks \
+           else raise_err (Errors.Fatal_MissingExposeInterfacesOption,
+                           BU.format3 "You may have a cyclic dependence on module %s: use --dep full to confirm. \
+                                       Alternatively, invoking fstar with %s on the command line breaks \
                                        the abstraction imposed by its interface %s; \
                                        if you really want this behavior add the option '--expose_interfaces'"
+                                       key
                                        (Option.get (implementation_of file_system_map key))
                                        (Option.get (interface_of file_system_map key)))
       else maybe_add_suffix (Option.get (interface_of file_system_map key))   //we prefer to use 'a.fsti'
 
     | PreferInterface key
-    | UseImplementation key ->
+    | UseImplementation key
+    | FriendImplementation key ->
         match implementation_of file_system_map key with
         | None ->
           //if d is actually an edge in the dep_graph computed by discover
@@ -253,20 +232,6 @@ let dependences_of (file_system_map:files_for_module_name)
     | Some (deps, _) ->
       List.map (file_of_dep file_system_map all_cmd_line_files) deps
 
-let add_dependence (deps:dependence_graph)
-                   (from:file_name) (to_:file_name)
-                  : unit =
-    let add_dep (d,color) to_ =
-        if is_interface to_
-        then (PreferInterface (lowercase_module_name to_)::d), color
-        else (UseImplementation (lowercase_module_name to_)::d), color
-    in
-    match deps_try_find deps from with
-    | None ->
-      deps_add_dep deps from (add_dep (empty_dependences, White) to_)
-    | Some key_deps ->
-      deps_add_dep deps from (add_dep key_deps to_)
-
 let print_graph (graph:dependence_graph) =
   Util.print_endline "A DOT-format graph has been dumped in the current directory as dep.graph";
   Util.print_endline "With GraphViz installed, try: fdp -Tpng -odep.png dep.graph";
@@ -278,7 +243,7 @@ let print_graph (graph:dependence_graph) =
           let deps = fst (must (deps_try_find graph k)) in
           let r s = replace_char s '.' '_' in
           let print dep =
-            Util.format2 " %s -> %s"
+            Util.format2 "  \"%s\" -> \"%s\""
                 (r k)
                 (r (module_name_of_dep dep))
           in
@@ -297,7 +262,7 @@ let build_inclusion_candidates_list (): list<(string * string)> =
   let include_directories = List.unique include_directories in
   let cwd = normalize_file_path (getcwd ()) in
   List.concatMap (fun d ->
-    if file_exists d then
+    if is_directory d then
       let files = readdir d in
       List.filter_map (fun f ->
         let f = basename f in
@@ -397,6 +362,11 @@ let hard_coded_dependencies full_filename =
        | None -> implicit_deps
        | Some ns -> implicit_deps @ [(ns, Open_namespace)]
 
+let dep_subsumed_by d d' =
+      match d, d' with
+      | PreferInterface l', FriendImplementation l -> l=l'
+      | _ -> d = d'
+
 (** Parse a file, walk its AST, return a list of FStar lowercased module names
     it depends on. *)
 let collect_one
@@ -409,7 +379,7 @@ let collect_one
   let deps     : ref<(list<dependence>)> = BU.mk_ref [] in
   let mo_roots : ref<(list<dependence>)> = BU.mk_ref [] in
   let add_dep deps d =
-    if not (List.existsML (fun d' -> d' = d) !deps) then
+    if not (List.existsML (dep_subsumed_by d) !deps) then
       deps := d :: !deps
   in
   let working_map = smap_copy original_map in
@@ -421,7 +391,6 @@ let collect_one
       add_dep deps (PreferInterface module_name);
       if has_interface original_or_working_map module_name
       && has_implementation original_or_working_map module_name
-      && FStar.Options.dep() = Some "full"
       then add_dep mo_roots (UseImplementation module_name);
       true
     | _ ->
@@ -522,12 +491,15 @@ let collect_one
     | Include lid
     | Open lid ->
         record_open false lid
+    | Friend lid ->
+        add_dep deps (FriendImplementation (lowercase_join_longident lid true))
     | ModuleAbbrev (ident, lid) ->
         if record_module_alias ident lid
         then add_dep deps (PreferInterface (lowercase_join_longident lid true))
     | TopLevelLet (_, patterms) ->
         List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms
     | Main t
+    | Splice (_, t)
     | Assume (_, t)
     | SubEffect { lift_op = NonReifiableLift t }
     | SubEffect { lift_op = LiftForFree t }
@@ -536,9 +508,13 @@ let collect_one
     | SubEffect { lift_op = ReifiableLift (t0, t1) } ->
         collect_term t0;
         collect_term t1
-    | Tycon (_, ts) ->
+    | Tycon (_, tc, ts) ->
+        begin
+        if tc then
+            record_lid Const.mk_class_lid;
         let ts = List.map (fun (x,docnik) -> x) ts in
         List.iter collect_tycon ts
+        end
     | Exception (_, t) ->
         iter_opt t collect_term
     | NewEffect ed ->
@@ -580,13 +556,17 @@ let collect_one
   and collect_binders binders =
     List.iter collect_binder binders
 
-  and collect_binder = function
+  and collect_binder b =
+    collect_aqual b.aqual;
+    match b with
     | { b = Annotated (_, t) }
     | { b = TAnnotated (_, t) }
-    | { b = NoName t } ->
-        collect_term t
-    | _ ->
-        ()
+    | { b = NoName t } -> collect_term t
+    | _ -> ()
+
+  and collect_aqual = function
+    | Some (Meta t) -> collect_term t
+    | _ -> ()
 
   and collect_term t =
     collect_term' t.tm
@@ -665,9 +645,14 @@ let collect_one
         List.iter (fun (_, t) -> collect_term t) idterms
     | Project (t, _) ->
         collect_term t
-    | Product (binders, t)
+    | Product (binders, t) ->
+      collect_binders binders;
+      collect_term t
     | Sum (binders, t) ->
-        collect_binders binders;
+        List.iter (function
+          | Inl b -> collect_binder b
+          | Inr t -> collect_term t)
+          binders;
         collect_term t
     | QForall (binders, ts, t)
     | QExists (binders, ts, t) ->
@@ -685,6 +670,10 @@ let collect_one
     | Ensures (t, _)
     | Labeled (t, _, _) ->
         collect_term t
+    | Quote (t, _)
+    | Antiquote t
+    | VQuote t ->
+        collect_term t
     | Attributes cattributes  ->
         List.iter collect_term cattributes
 
@@ -695,16 +684,18 @@ let collect_one
     collect_pattern' p.pat
 
   and collect_pattern' = function
-    | PatWild
+    | PatVar (_, aqual)
+    | PatTvar (_, aqual)
+    | PatWild aqual ->
+        collect_aqual aqual
+
     | PatOp _
     | PatConst _ ->
         ()
     | PatApp (p, ps) ->
         collect_pattern p;
         collect_patterns ps
-    | PatVar _
-    | PatName _
-    | PatTvar _ ->
+    | PatName _ ->
         ()
     | PatList ps
     | PatOr ps
@@ -712,9 +703,13 @@ let collect_one
         collect_patterns ps
     | PatRecord lidpats ->
         List.iter (fun (_, p) -> collect_pattern p) lidpats
-    | PatAscribed (p, t) ->
+    | PatAscribed (p, (t, None)) ->
         collect_pattern p;
         collect_term t
+    | PatAscribed (p, (t, Some tac)) ->
+        collect_pattern p;
+        collect_term t;
+        collect_term tac
 
 
   and collect_branches bs =
@@ -730,11 +725,22 @@ let collect_one
   let mname = lowercase_module_name filename in
   if is_interface filename
   && has_implementation original_map mname
-  && FStar.Options.dep() = Some "full"
   then add_dep mo_roots (UseImplementation mname);
   collect_module ast;
   (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
   !deps, !mo_roots
+
+
+(* JP: it looks like the code was changed but the comments were never updated.
+ * In particular, we no longer compute transitive dependencies, and we no longer
+ * map lowercase module names to filenames. *)
+
+// Used by F*.js
+let collect_one_cache : ref<(smap<(list<dependence> * list<dependence>)>)> =
+  BU.mk_ref (BU.smap_create 0)
+
+let set_collect_one_cache (cache: smap<(list<dependence> * list<dependence>)>) : unit =
+  collect_one_cache := cache
 
 (** Collect the dependencies for a list of given files.
     And record the entire dependence graph in the memoized state above **)
@@ -764,7 +770,10 @@ let collect (all_cmd_line_files: list<file_name>)
   let rec discover_one (file_name:file_name) =
     if deps_try_find dep_graph file_name = None then
     begin
-      let deps, mo_roots = collect_one file_system_map file_name in
+      let deps, mo_roots =
+        match BU.smap_try_find !collect_one_cache file_name with
+        | Some cached -> cached
+        | None -> collect_one file_system_map file_name in
       let deps =
           let module_name = lowercase_module_name file_name in
           if is_implementation file_name
@@ -782,19 +791,50 @@ let collect (all_cmd_line_files: list<file_name>)
   List.iter discover_one all_cmd_line_files;
 
   (* At this point, dep_graph has all the (immediate) dependency graph of all the files. *)
-
-  let topological_dependences_of all_command_line_files =
-      let topologically_sorted = BU.mk_ref [] in
-      (* Compute the transitive closure, collecting visiting files in a post-order traversal *)
-      let rec aux (cycle:list<file_name>) filename =
-        let direct_deps, color = must (deps_try_find dep_graph filename) in
+  let dep_graph_copy dep_graph =
+      let (Deps g) = dep_graph in
+      Deps (BU.smap_copy g)
+  in
+  let cycle_detected dep_graph cycle filename =
+      Util.print1 "The cycle contains a subset of the modules in:\n%s \n" (String.concat "\n`used by` " cycle);
+      print_graph dep_graph;
+      print_string "\n";
+      Errors.raise_err (Errors.Fatal_CyclicDependence,
+                        BU.format1 "Recursive dependency on module %s\n" filename)
+  in
+  (* full_cycle_detection finds cycles across interface
+     boundaries that can otherwise be exploited to
+     build cross-module recursive loops, as in issue #1391
+  *)
+  let full_cycle_detection all_command_line_files =
+    let dep_graph = dep_graph_copy dep_graph in
+    let rec aux (cycle:list<file_name>) filename =
+        let direct_deps, color =
+            match deps_try_find dep_graph filename with
+            | Some (d, c) -> d, c
+            | None ->
+              failwith (BU.format1 "Failed to find dependences of %s" filename)
+        in
+        let direct_deps = direct_deps |> List.collect (fun x ->
+            match x with
+            | UseInterface f
+            | PreferInterface f ->
+              begin
+              match implementation_of file_system_map f with
+              | None -> [x]
+              | Some fn when fn=filename ->
+                //don't add trivial self-loops
+                [x]
+              | _ ->
+                //if a module A uses B
+                //then detect cycles through both B.fsti
+                //and B.fst
+               [x; UseImplementation f]
+              end
+            | _ -> [x]) in
         match color with
         | Gray ->
-            Errors.log_issue Range.dummyRange (Errors.Warning_RecursiveDependency, (BU.format1 "Recursive dependency on module %s\n" filename));
-            Util.print1 "The cycle contains a subset of the modules in:\n%s \n" (String.concat "\n`used by` " cycle);
-            print_graph dep_graph;
-            print_string "\n";
-            exit 1
+           cycle_detected dep_graph cycle filename
         | Black ->
             (* If the element has been visited already, then the map contains all its
              * dependencies. Otherwise, the map only contains its direct dependencies. *)
@@ -807,34 +847,92 @@ let collect (all_cmd_line_files: list<file_name>)
                                       dep_graph
                                       all_command_line_files
                                       filename);
-            (* Mutate the graph (it now remembers transitive dependencies). *)
-            deps_add_dep dep_graph filename (direct_deps, Black);
-            (* Also build the topological sort (Tarjan's algorithm). *)
-            topologically_sorted := filename :: !topologically_sorted
+            (* Mutate the graph (to mark the node as visited) *)
+            deps_add_dep dep_graph filename (direct_deps, Black)
       in
-      List.iter (aux []) all_command_line_files;
-      !topologically_sorted
+      List.iter (aux []) all_command_line_files
   in
+  full_cycle_detection all_cmd_line_files;
+
   //only verify those files on the command line
   all_cmd_line_files |>
   List.iter (fun f ->
     let m = lowercase_module_name f in
     Options.add_verify_module m);
 
-  topological_dependences_of all_cmd_line_files,
-  Mk (dep_graph, file_system_map, all_cmd_line_files)
+  let topological_dependences_of all_command_line_files =
+      let rec all_friend_deps_1
+                dep_graph
+                (cycle:list<file_name>)
+                (all_friends, all_files)
+                filename =
+        let direct_deps, color = must (deps_try_find dep_graph filename) in
+        match color with
+        | Gray ->
+            cycle_detected dep_graph cycle filename; all_friends, all_files
+        | Black ->
+            (* If the element has been visited already, then the map contains all its
+             * dependencies. Otherwise, the map only contains its direct dependencies. *)
+            all_friends, all_files
+        | White ->
+            (* Unvisited. Compute. *)
+            deps_add_dep dep_graph filename (direct_deps, Gray);
+            let all_friends, all_files =
+                all_friend_deps
+                    dep_graph cycle (all_friends, all_files)
+                    (dependences_of file_system_map
+                                    dep_graph
+                                    all_command_line_files
+                                    filename)
+            in
+            (* Mutate the graph to mark the node as visited *)
+            deps_add_dep dep_graph filename (direct_deps, Black);
+            (* Also build the topological sort (Tarjan's algorithm). *)
+            List.filter (function FriendImplementation _ -> true | _ -> false) direct_deps
+            @all_friends,
+            filename :: all_files
+      and all_friend_deps dep_graph cycle all_friends filenames =
+          List.fold_left
+                    (fun all_friends k ->
+                         all_friend_deps_1 dep_graph (k :: cycle) all_friends k)
+                   all_friends
+                   filenames
+      in
+      let friends, _ =
+          all_friend_deps (dep_graph_copy dep_graph) [] ([], []) all_command_line_files
+      in
+      let widen_deps friends deps =
+          deps |> List.map (fun d ->
+            match d with
+            | PreferInterface f
+                when List.contains (FriendImplementation f) friends ->
+              FriendImplementation f
+            | _ -> d)
+      in
+      let _, all_files =
+          let (Deps dg) = dep_graph in
+          let (Deps dg') = deps_empty() in
+          BU.smap_fold dg (fun filename (dependences, color) () ->
+              BU.smap_add dg' filename (widen_deps friends dependences, color)) ();
+          all_friend_deps (Deps dg') [] ([], []) all_command_line_files
+      in
+      all_files
+  in
+  let all_files = topological_dependences_of all_cmd_line_files in
+  all_files,
+  Mk (dep_graph, file_system_map, all_cmd_line_files, all_files)
 
-let deps_of (Mk (deps, file_system_map, all_cmd_line_files)) (f:file_name)
+let deps_of (Mk (deps, file_system_map, all_cmd_line_files, _)) (f:file_name)
     : list<file_name> =
     dependences_of file_system_map deps all_cmd_line_files f
 
-let hash_dependences (Mk (deps, file_system_map, all_cmd_line_files)) fn =
+let hash_dependences (Mk (deps, file_system_map, all_cmd_line_files, _)) fn =
     let fn =
         match FStar.Options.find_file fn with
         | Some fn -> fn
         | _ -> fn
     in
-    let cache_file = cache_file_name all_cmd_line_files fn in
+    let cache_file = cache_file_name fn in
     let digest_of_file fn =
         if Options.debug_any()
         then BU.print2 "%s: contains digest of %s\n" cache_file fn;
@@ -861,12 +959,21 @@ let hash_dependences (Mk (deps, file_system_map, all_cmd_line_files)) fn =
     let rec hash_deps out = function
         | [] -> Some (("source", source_hash)::interface_hash@out)
         | fn::deps ->
-          let cache_fn = cache_file_name all_cmd_line_files fn in
-          if BU.file_exists cache_fn
-          then hash_deps ((lowercase_module_name fn, digest_of_file cache_fn) :: out) deps
-          else (if Options.debug_any()
-                then BU.print2 "%s: missed digest of file %s\n" cache_file cache_fn;
-                None)
+          let digest =
+            let fn = cache_file_name fn in
+            if BU.file_exists fn
+            then Some (digest_of_file fn)
+            else match FStar.Options.find_file (FStar.Util.basename fn) with
+                 | None -> None
+                 | Some fn -> Some (digest_of_file fn)
+          in
+          match digest with
+          | None ->
+            if Options.debug_any()
+            then BU.print2 "%s: missed digest of file %s\n" cache_file (cache_file_name fn);
+            None
+          | Some dig ->
+            hash_deps ((lowercase_module_name fn, dig) :: out) deps
     in
     hash_deps [] binary_deps
 
@@ -880,7 +987,7 @@ let print_digest (dig:list<(string * string)>) : string =
 
     Deprecated: this will print the dependences among the source files
   *)
-let print_make (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
+let print_make (Mk (deps, file_system_map, all_cmd_line_files, _)) : unit =
     let keys = deps_keys deps in
     keys |> List.iter
         (fun f ->
@@ -891,6 +998,13 @@ let print_make (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
           //   a.fst: b.fst c.fsti a.fsti
           Util.print2 "%s: %s\n\n" f (String.concat " " files))
 
+let print_raw deps =
+    let (Mk(Deps deps, _, _, _)) = deps in
+      smap_fold deps (fun k (dep, _) out ->
+        BU.format2 "%s -> [\n\t%s\n] " k (List.map dep_to_string dep |> String.concat ";\n\t") :: out) []
+      |> String.concat ";;\n"
+      |> BU.print_endline
+
 (** Print the dependencies as returned by [collect] in a Makefile-compatible
     format.
 
@@ -899,7 +1013,8 @@ let print_make (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
      -- We also print dependences for producing .ml files from .checked files
         This takes care of renaming A.B.C.fst to A_B_C.ml
   *)
-let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
+let print_full deps : unit =
+    let (Mk (deps, file_system_map, all_cmd_line_files, all_files)) = deps in
     let sort_output_files (orig_output_file_map:BU.smap<string>) =
         let order : ref<(list<string>)> = BU.mk_ref [] in
         let remaining_output_files = BU.smap_copy orig_output_file_map in
@@ -957,36 +1072,61 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
     let output_ml_file f = norm_path (output_file ".ml" f) in
     let output_krml_file f = norm_path (output_file ".krml" f) in
     let output_cmx_file f = norm_path (output_file ".cmx" f) in
-    let cache_file f = norm_path (cache_file_name all_cmd_line_files f) in
+    let cache_file f = norm_path (cache_file_name f) in
+    let transitive_krml = smap_create 41 in
     keys |> List.iter
         (fun f ->
           let f_deps, _ = deps_try_find deps f |> Option.get in
+          let iface_deps =
+              if is_interface f
+              then None
+              else match interface_of file_system_map (lowercase_module_name f) with
+                   | None ->
+                     None
+                   | Some iface ->
+                     Some (fst (Option.get (deps_try_find deps iface)))
+          in
+          let iface_deps =
+              BU.map_opt iface_deps
+                         (List.filter (fun iface_dep ->
+                             not (BU.for_some (dep_subsumed_by iface_dep) f_deps)))
+          in
           let norm_f = norm_path f in
           let files = List.map (file_of_dep_aux true file_system_map all_cmd_line_files) f_deps in
+          let files =
+              match iface_deps with
+              | None -> files
+              | Some iface_deps ->
+                let iface_files =
+                    List.map (file_of_dep_aux true file_system_map all_cmd_line_files) iface_deps
+                in
+                BU.remove_dups (fun x y -> x = y) (files @ iface_files)
+          in
           let files = List.map norm_path files in
           let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
           let files = String.concat "\\\n\t" files in
-          //interfaces get two lines of output
-          //this one prints:
-          //   a.fsti.source: a.fsti b.fst.checked c.fsti.checked
-          //                 touch $@
-          if is_interface f then Util.print3 "%s.source: %s \\\n\t%s\n\ttouch $@\n\n"
-                                             (norm_path (FStar.Options.prepend_cache_dir norm_f))
-                                             norm_f
-                                             files;
+
           //this one prints:
           //   a.fst.checked: b.fst.checked c.fsti.checked a.fsti
           Util.print3 "%s: %s \\\n\t%s\n\n"
                       (cache_file f)
                       norm_f
                       files;
-          
-          //emit rule for extracted interface: a.fsti.checked: a.fst b.fsti.checked
-          if Options.use_extracted_interfaces () && is_implementation f && not (has_interface file_system_map (lowercase_module_name f))
-          then Util.print3 "%s: %s \\\n\t%s\n\n"
-                           (cache_file (interface_filename f))
-                           norm_f
-                           files;
+
+          // for building an executable from a given module:
+          // foo.exe: dep1.krml dep2.krml etc.
+          let already_there =
+            match smap_try_find transitive_krml (norm_path (output_file ".krml" f)) with
+            | Some (_, already_there, _) -> already_there
+            | None -> []
+          in
+          smap_add transitive_krml
+            (norm_path (output_file ".krml" f))
+            (norm_path (output_file ".exe" f),
+              List.unique (already_there @ List.map
+                (fun x -> norm_path (output_file ".krml" x))
+                (deps_of (Mk (deps, file_system_map, all_cmd_line_files, all_files)) f)),
+              false);
 
           //And, if this is not an interface, we also print out the dependences among the .ml files
           // excluding files in ulib, since these are packaged in fstarlib.cmxa
@@ -996,6 +1136,14 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
                 let fst_files =
                     f_deps |> List.map (file_of_dep_aux false file_system_map all_cmd_line_files)
                 in
+                let fst_files_from_iface =
+                    match iface_deps with
+                    | None -> []
+                    | Some iface_deps ->
+                      let id = iface_deps |> List.map (file_of_dep_aux false file_system_map all_cmd_line_files) in
+                      id
+                in
+                let fst_files = BU.remove_dups (fun x y -> x = y) (fst_files @ fst_files_from_iface) in
                 let extracted_fst_files =
                     fst_files |> List.filter (fun df ->
                         lowercase_module_name df <> lowercase_module_name f //avoid circular deps on f's own cmx
@@ -1032,6 +1180,32 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
                        BU.smap_add krml_file_map mname (output_krml_file fst_file));
         sort_output_files krml_file_map
     in
+    // compute transitive closure for dependency graphs that contain multiple
+    // entry points
+    let rec make_transitive f =
+      let exe, deps, seen = must (smap_try_find transitive_krml f) in
+      if seen then
+        exe, deps
+      else begin
+        (* JP: avoid loops for nodes that point to themselves via their
+         * interface. *)
+        smap_add transitive_krml f (exe, deps, true);
+        let deps = List.unique (List.flatten (List.map (fun dep ->
+          let _, deps = make_transitive dep in
+          dep :: deps
+        ) deps)) in
+        smap_add transitive_krml f (exe, deps, true);
+        exe, deps
+      end
+    in
+    List.iter (fun f ->
+      let exe, deps = make_transitive f in
+      let deps = String.concat " " (List.unique (f :: deps)) in
+      let wasm = BU.substring exe 0 (String.length exe - 4) ^ ".wasm" in
+      Util.print2 "%s: %s\n\n" exe deps;
+      Util.print2 "%s: %s\n\n" wasm deps
+    ) (smap_keys transitive_krml);
+
     Util.print1 "ALL_FST_FILES=\\\n\t%s\n\n"  (all_fst_files  |> List.map norm_path |> String.concat " \\\n\t");
     Util.print1 "ALL_ML_FILES=\\\n\t%s\n\n"   (all_ml_files   |> List.map norm_path |> String.concat " \\\n\t");
     Util.print1 "ALL_KRML_FILES=\\\n\t%s\n"   (all_krml_files |> List.map norm_path |> String.concat " \\\n\t")
@@ -1043,9 +1217,30 @@ let print deps =
   | Some "full" ->
       print_full deps
   | Some "graph" ->
-      let (Mk(deps, _, _)) = deps in
+      let (Mk(deps, _, _, _)) = deps in
+      (* JP: this was broken by the change of the main map to contain filenames
+       * instead of module names. *)
       print_graph deps
+  | Some "raw" ->
+      print_raw deps
   | Some _ ->
       raise_err (Errors.Fatal_UnknownToolForDep, "unknown tool for --dep\n")
   | None ->
       assert false
+
+let print_fsmap fsmap =
+    smap_fold fsmap (fun k (v0, v1) s ->
+        s
+        ^ "; "
+        ^ BU.format3 "%s -> (%s, %s)"
+                k (BU.dflt "_" v0) (BU.dflt "_" v1))
+        ""
+
+let module_has_interface (Mk (_, fsmap, _, _)) module_name =
+    has_interface fsmap (String.lowercase (Ident.string_of_lid module_name))
+
+let deps_has_implementation (Mk (_, _, _, all_files)) module_name =
+    let m = String.lowercase (Ident.string_of_lid module_name) in
+    all_files |> BU.for_some (fun f ->
+        is_implementation f
+        && String.lowercase (module_name_of_file f) = m)

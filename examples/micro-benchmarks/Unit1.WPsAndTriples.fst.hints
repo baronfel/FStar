@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "f9022d82c4e8fcf47c327c4d487fc691"
+      "fc0fcab858036df5a47f2c6e45fee36b"
     ],
     [
       "Unit1.WPsAndTriples.h",
@@ -17,7 +17,43 @@
       1,
       [ "@query" ],
       0,
-      "ff0ad058f9eef5ccb8795c5b4657b30f"
+      "f26391c74728d840fcb7f3f829aed256"
+    ],
+    [
+      "Unit1.WPsAndTriples.g",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "653814acf3bea3662fcf4150d7c9779f"
+    ],
+    [
+      "Unit1.WPsAndTriples.f",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "53292d4c0af1d235a308c78dc7660b18"
+    ],
+    [
+      "Unit1.WPsAndTriples.h",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "840418fd5304b03e7cb986c3ea12383e"
+    ],
+    [
+      "Unit1.WPsAndTriples.g",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "edf4ad7c3e8582694986bd7055fc0da6"
     ]
   ]
 ]

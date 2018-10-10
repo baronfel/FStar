@@ -1,0 +1,83 @@
+[
+  "Ž\u0013ÒdKÃ2¾Mq;B\u001eÀ]Ô",
+  [
+    [
+      "DeltaDepth.__proj__A__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_DeltaDepth.A",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_DeltaDepth_Tm_refine_5e57589849c6497f93798a0ea15a1df2"
+      ],
+      0,
+      "29331963fffce7f35586f02bb634fdb2"
+    ],
+    [
+      "DeltaDepth.__proj__B__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_DeltaDepth.B",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_DeltaDepth_Tm_refine_90c35950d1e7f0a820470167e5c76674"
+      ],
+      0,
+      "04ae91e78da53bc351ecbb6356ed3e68"
+    ],
+    [
+      "DeltaDepth.m",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_DeltaDepth.A",
+        "disc_equation_DeltaDepth.A", "equation_DeltaDepth.v",
+        "projection_inverse_DeltaDepth.A__0"
+      ],
+      0,
+      "50dfeee66e5e6a9e8c7f24deca702b5b"
+    ],
+    [
+      "DeltaDepth.__proj__A__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_DeltaDepth.A",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_DeltaDepth_Tm_refine_5e57589849c6497f93798a0ea15a1df2"
+      ],
+      0,
+      "40c98a220381b4f6fde118baa329bb2d"
+    ],
+    [
+      "DeltaDepth.__proj__B__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_DeltaDepth.B",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_DeltaDepth_Tm_refine_90c35950d1e7f0a820470167e5c76674"
+      ],
+      0,
+      "2df0f8d29b04768a676796b3cda28c7b"
+    ],
+    [
+      "DeltaDepth.m",
+      2,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_DeltaDepth.A",
+        "disc_equation_DeltaDepth.A", "equation_DeltaDepth.v",
+        "projection_inverse_DeltaDepth.A__0"
+      ],
+      0,
+      "e8cd1c73351857fb82645caf029c475f"
+    ]
+  ]
+]

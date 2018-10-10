@@ -24,7 +24,7 @@ type log_t (r:rid) = m_rref r (seq entry) grows
 noeq abstract type pkey = 
   | PKey: #region:rid -> rawpk:RSA.pkey -> log: log_t region -> pkey
 
-let access_pk_raw (pk:pkey) =
+abstract let access_pk_raw (pk:pkey) =
   PKey?.rawpk pk
 
 
@@ -35,7 +35,7 @@ val keygen: parent:rid{HyperStack.ST.witnessed (region_contains_pred parent)} ->
 let keygen parent  =
   let pkey_raw, skey_raw = RSA.gen () in
   let region = new_region parent in
-  let log = alloc_mref_seq region createEmpty in
+  let log = alloc_mref_seq region Seq.empty in
   let pkey = PKey #region pkey_raw log in
   pkey, SKey skey_raw pkey
 

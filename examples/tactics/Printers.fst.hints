@@ -1,55 +1,19 @@
 [
-  "¥Ñ\u0007}ð\u001f9Å€hoy\náZ\u0012",
+  "ðhª\u007fð„[\u001b7h\u0002é´Ñ\u0016G",
   [
     [
-      "Printers.mk_print_binder",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "9d1bb78404a254f238b79b7637e24fa9"
-    ],
-    [
-      "Printers.printer",
+      "Printers.maplast",
       1,
       2,
       1,
       [
-        "@MaxIFuel_assumption",
-        "@fuel_correspondence_Printers.mk_concat.fuel_instrumented",
-        "@query", "disc_equation_FStar.Reflection.Data.Sg_Inductive",
-        "disc_equation_FStar.Reflection.Data.Sg_Let",
-        "disc_equation_FStar.Reflection.Data.Unk",
-        "equality_tok_FStar.Reflection.Data.Unk@tok",
-        "equation_FStar.Reflection.Basic.lookup_typ",
-        "equation_Printers.paren",
-        "fuel_guarded_inversion_FStar.Reflection.Data.sigelt_view",
-        "typing_FStar.Reflection.Basic.__lookup_typ"
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3771f5e8255faf0fda61b2996d5be215"
-    ],
-    [
-      "Printers.t1",
-      1,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int",
-        "assumption_Prims.HasEq_string"
-      ],
-      0,
-      "f1a95afbab957d658a950b0b3cea0a9e"
-    ],
-    [
-      "Printers.uu___is_A",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "b4479e8c4fd821c9e1092fc996e22799"
+      "4364c42a5d98e3603c6c790d731661e5"
     ],
     [
       "Printers.__proj__A__item___0",
@@ -62,7 +26,7 @@
         "refinement_interpretation_Printers_Tm_refine_1a7b69b43f7b02549720ebdb7731aa7f"
       ],
       0,
-      "1cf08be0da247c24a4569526b252e936"
+      "a8745823c267147da788e5bb87364e50"
     ],
     [
       "Printers.__proj__A__item___1",
@@ -75,16 +39,7 @@
         "refinement_interpretation_Printers_Tm_refine_1a7b69b43f7b02549720ebdb7731aa7f"
       ],
       0,
-      "3b1c20f8d8f98e4d9b58f7ed90e9057f"
-    ],
-    [
-      "Printers.uu___is_B",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "b0d1c9f4ae78fd3bd30891a11d995824"
+      "37d5330855fa5c2fe3d3157c9009f31b"
     ],
     [
       "Printers.__proj__B__item___0",
@@ -97,16 +52,59 @@
         "refinement_interpretation_Printers_Tm_refine_c8b4b75e38b41b48b268ea0a3f90e3cd"
       ],
       0,
-      "aec6346b174268f5fdf517cebaa28f28"
+      "ebc7ee08094e84a1bc20e3f5b0f217a7"
     ],
     [
-      "Printers.uu___is_C",
+      "Printers.__proj__B__item___1",
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.B",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Printers_Tm_refine_c8b4b75e38b41b48b268ea0a3f90e3cd"
+      ],
       0,
-      "af02a4243f36467c00b864344c38aa0c"
+      "9cea2bfe5692ba3ed24e74d1abb38aa7"
+    ],
+    [
+      "Printers.__proj__D__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.D",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Printers_Tm_refine_3c3099d8265cd24e0a96805751c994d1"
+      ],
+      0,
+      "527167b2213d2cd06157c3a5c457e93e"
+    ],
+    [
+      "Printers.__proj__E__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.E",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Printers_Tm_refine_410bdfe840bb48a5ed0357e092bfc39f"
+      ],
+      0,
+      "a2e27203c506b403266a38116379a6d3"
+    ],
+    [
+      "Printers.__proj__F__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.F",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Printers_Tm_refine_9c3e9566abf10c7d01bd5254baeab0f0"
+      ],
+      0,
+      "96ad3d9f9730fe2dfa89e94cc426d193"
     ],
     [
       "Printers.t1_print",
@@ -114,66 +112,242 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "constructor_distinct_Printers.C",
-        "disc_equation_Printers.A", "disc_equation_Printers.B",
-        "disc_equation_Printers.C", "fuel_guarded_inversion_Printers.t1"
+        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.A",
+        "disc_equation_Printers.B", "disc_equation_Printers.C",
+        "disc_equation_Printers.D", "disc_equation_Printers.E",
+        "disc_equation_Printers.F", "fuel_guarded_inversion_Printers.t1",
+        "subterm_ordering_Printers.B", "subterm_ordering_Printers.E"
       ],
       0,
-      "48d2cc6f068225c6be0724ac94f53752"
+      "dac556bbea653f00969e9c31a1c4d6a7"
     ],
     [
-      "Printers.uu___105",
+      "Printers.uu___64",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "2ccfda61c602ca177295f2b0ca8afd94"
+      "371bb99d16e2c302edd2b06550c9b7db"
     ],
     [
-      "Printers.uu___105",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "9e98bccec1109bdc103fb9032126922f"
-    ],
-    [
-      "Printers.uu___106",
+      "Printers.uu___65",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "8ed1ec4677ca7fd6713fb9d2e5b31704"
+      "b42b78d43411ea03afcd21f7e708bc4e"
     ],
     [
-      "Printers.uu___106",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "bbdd910253e008b22478aa9319066d81"
-    ],
-    [
-      "Printers.uu___107",
+      "Printers.uu___66",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "27be46b7381046cd86a1928ae0bda0b7"
+      "83a086e8c3427d90c4dd50ea27ac3041"
     ],
     [
-      "Printers.uu___107",
+      "Printers.uu___67",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0,
+      "362c00524e2714bf7fc6915dc2cda38a"
+    ],
+    [
+      "Printers.uu___68",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0,
+      "2fad432177af4eda1f1a0e7dd52089ab"
+    ],
+    [
+      "Printers.uu___69",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0,
+      "1587a9dc3375fc3988e19973cec20435"
+    ],
+    [
+      "Printers.maplast",
       2,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+      ],
       0,
-      "e16bb8c77542c35a48ebf35115fc7e28"
+      "580a7d5699420801b09bbbea773a1085"
+    ],
+    [
+      "Printers.__proj__A__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.A",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Printers_Tm_refine_1a7b69b43f7b02549720ebdb7731aa7f"
+      ],
+      0,
+      "929ff6c2056bfdda05c71c1b2f6c5d8a"
+    ],
+    [
+      "Printers.__proj__A__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.A",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Printers_Tm_refine_1a7b69b43f7b02549720ebdb7731aa7f"
+      ],
+      0,
+      "3cfe86786f520764f18cce7b9e0c7f66"
+    ],
+    [
+      "Printers.__proj__B__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.B",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Printers_Tm_refine_c8b4b75e38b41b48b268ea0a3f90e3cd"
+      ],
+      0,
+      "686739c7cd14cf8602f322bc157816b0"
+    ],
+    [
+      "Printers.__proj__B__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.B",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Printers_Tm_refine_c8b4b75e38b41b48b268ea0a3f90e3cd"
+      ],
+      0,
+      "405bfec6918e22cc34534a7e34b6452f"
+    ],
+    [
+      "Printers.__proj__D__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.D",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Printers_Tm_refine_3c3099d8265cd24e0a96805751c994d1"
+      ],
+      0,
+      "430a98d3767dbb782d92eb5ca0540d92"
+    ],
+    [
+      "Printers.__proj__E__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.E",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Printers_Tm_refine_410bdfe840bb48a5ed0357e092bfc39f"
+      ],
+      0,
+      "83b497bd8420db3e153a780d70d67008"
+    ],
+    [
+      "Printers.__proj__F__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.F",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Printers_Tm_refine_9c3e9566abf10c7d01bd5254baeab0f0"
+      ],
+      0,
+      "5c36238e0c0aab7b4885645f7f276016"
+    ],
+    [
+      "Printers.t1_print",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.A",
+        "disc_equation_Printers.B", "disc_equation_Printers.C",
+        "disc_equation_Printers.D", "disc_equation_Printers.E",
+        "disc_equation_Printers.F", "fuel_guarded_inversion_Printers.t1",
+        "subterm_ordering_Printers.B", "subterm_ordering_Printers.E"
+      ],
+      0,
+      "b64844d6ce01bc0c529b73e284793e0d"
+    ],
+    [
+      "Printers.uu___64",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0,
+      "511e6d40e61f15d3beeec4894c722431"
+    ],
+    [
+      "Printers.uu___65",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0,
+      "10de0df97c0ed652c76d27faff6f267b"
+    ],
+    [
+      "Printers.uu___66",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0,
+      "e2f50bd0b7d8e495d92de2ef897fac17"
+    ],
+    [
+      "Printers.uu___67",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0,
+      "85c65264618061cfaa19b3182f1cb237"
+    ],
+    [
+      "Printers.uu___68",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0,
+      "1b66ba076ac3fe9a07a23dca5fcf9f74"
+    ],
+    [
+      "Printers.uu___69",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0,
+      "6d402588fc7b11e148d1737abba3760b"
     ]
   ]
 ]

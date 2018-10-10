@@ -1,23 +1,19 @@
 [
-  "tÞ\u0014l&Œ·Ùž'q’Â%—R",
+  "&) \tr\u0015[njøñMH5qž",
   [
     [
-      "FStar.Tactics.Types.uu___is_TopDown",
+      "FStar.Tactics.Types.__proj__TacticFailure__item__uu___",
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Tactics.Types.TacticFailure",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Tactics.Types_Tm_refine_f49633c0c264cfe426b78eef812b39f3"
+      ],
       0,
-      "779fac94e694f1b7a3a2817ca8a91f2f"
-    ],
-    [
-      "FStar.Tactics.Types.uu___is_BottomUp",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "dae89764f23d8c5740f7c6c66657422a"
+      "92cf9e096153b5ba71b58f50801786ab"
     ]
   ]
 ]

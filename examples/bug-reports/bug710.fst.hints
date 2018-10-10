@@ -2,24 +2,6 @@
   "š<äèïÒ{Ä°Þ9öWDôã",
   [
     [
-      "Bug710.uu___is_Low",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "1960307bf1ae186251f21b85d677b817"
-    ],
-    [
-      "Bug710.uu___is_High",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "9485ec5c3f01eb6751f5871761ee86d4"
-    ],
-    [
       "Bug710.bind_ifc",
       1,
       2,
@@ -35,10 +17,10 @@
         "kinding_Bug710.label@tok",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0"
+        "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "3b1deb8b50367d771d646d7af5f37d82"
+      "f17ae080a5ab79ed1f5e7de3d21e01b7"
     ],
     [
       "Bug710.left_unit",
@@ -62,10 +44,11 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
-        "projection_inverse_FStar.Pervasives.Native.Some_v"
+        "projection_inverse_FStar.Pervasives.Native.Some_v",
+        "typing_Bug710.bind_ifc", "typing_Bug710.return_ifc"
       ],
       0,
-      "49898513151a8b60c0bb2af6f42ee48b"
+      "daae5500c63dc9d2948438c3449587da"
     ]
   ]
 ]

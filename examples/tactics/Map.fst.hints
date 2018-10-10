@@ -2,18 +2,6 @@
   "˜ª¢á\ré<ÈýZ†Gù¨sÖ",
   [
     [
-      "Map.upd",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "7ab5da7cf67bbae504897f147ed09b0d"
-    ],
-    [
       "Map.sel_upd1",
       1,
       2,
@@ -24,7 +12,7 @@
         "primitive_Prims.op_Equality"
       ],
       0,
-      "88e97df39e27b0f451c27627183bb614"
+      "23b8d410e1fc212a90f7924906e531a8"
     ],
     [
       "Map.sel_upd2",
@@ -37,7 +25,7 @@
         "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "3202d1dff31299bcc86c650e9ca0635c"
+      "436de31c931adb40c1db35f2d7e8e25a"
     ]
   ]
 ]

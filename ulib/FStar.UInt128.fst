@@ -14,10 +14,13 @@ module Math = FStar.Math.Lemmas
 #reset-options "--max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
 #set-options "--normalize_pure_terms_for_extraction"
 
+// This type gets a special treatment in KreMLin and its definition is never
+// printed in the resulting C file.
 type uint128: Type0 = { low: U64.t; high: U64.t }
 
 let t = uint128
 
+noextract
 let v x = U64.v x.low + (U64.v x.high) * (pow2 64)
 
 let div_mod (x:nat) (k:nat{k > 0}) : Lemma (x / k * k + x % k == x) = ()
@@ -556,7 +559,8 @@ let shift_t_mod_val (a: t) (s: nat{s < 64}) :
   Math.paren_mul_right a_h (pow2 64) (pow2 s);
   ()
 
-#set-options "--z3rlimit 80"
+#reset-options "--normalize_pure_terms_for_extraction"
+#set-options "--z3rlimit 300"
 let shift_left_small (a: t) (s: U32.t) : Pure t
   (requires (U32.v s < 64))
   (ensures (fun r -> v r = (v a * pow2 (U32.v s)) % pow2 128)) =
@@ -574,7 +578,7 @@ let shift_left_small (a: t) (s: U32.t) : Pure t
 val shift_left_large : a:t -> s:U32.t{U32.v s >= 64 /\ U32.v s < 128} ->
   r:t{v r = (v a * pow2 (U32.v s)) % pow2 128}
 #reset-options "--max_fuel 0 --max_ifuel 0"
-#set-options "--normalize_pure_terms_for_extraction"
+#set-options "--normalize_pure_terms_for_extraction --z3rlimit 150"
 let shift_left_large a s =
   let h_shift = U32.sub s u32_64 in
   assert (U32.v h_shift < 64);
@@ -586,7 +590,7 @@ let shift_left_large a s =
   assert (U64.v r.high * pow2 64 == (U64.v a.low * pow2 (U32.v s)) % pow2 128);
   shift_left_large_lemma_t a (U32.v s);
   r
-#set-options "--z3rlimit 128"
+#set-options "--z3rlimit 128 --max_fuel 0 --max_ifuel 0"
 
 let shift_left a s =
   if (U32.lt s u32_64) then shift_left_small a s
@@ -1042,6 +1046,7 @@ let n_minus_mod_exact (n:nat) (k:pos) :
 let sub_mod_gt_0 (n:nat) (k:pos) :
   Lemma (0 <= n - n % k) = ()
 
+#set-options "--z3rlimit 20"
 val sum_rounded_mod_exact : n:nat -> m:nat -> k:pos ->
   Lemma (((n - n%k) + (m - m%k)) / k * k == (n - n%k) + (m - m%k))
 let sum_rounded_mod_exact n m k =
@@ -1052,7 +1057,6 @@ let sum_rounded_mod_exact n m k =
   mod_add (n - n%k) (m - m%k) k;
   Math.div_exact_r ((n - n%k) + (m - m % k)) k
 
-#set-options "--z3rlimit 20"
 val div_sum_combine : n:nat -> m:nat -> k:pos ->
   Lemma (n / k + m / k == (n + (m - n % k) - m % k) / k)
 let div_sum_combine n m k =
@@ -1082,6 +1086,7 @@ let product_div_bound (#n:pos) (x y: UInt.uint_t n) :
   product_bound x y (pow2 n);
   pow2_div_bound #(n+n) (x * y) n
 
+#set-options "--z3rlimit 100"
 let mul_wide (x y:U64.t) : Pure t
   (requires True)
   (ensures (fun r -> v r == U64.v x * U64.v y)) =

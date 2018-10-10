@@ -1,6 +1,17 @@
 FSTAR_HOME=../..
 include ../Makefile.include
 
-all:uall
+OTHERFLAGS+=--include ../tactics
 
-uall:FStar.SL.Monotonic.Heap.uver FStar.SL.Heap.uver Lang.uver SL.Tactics.uver Examples.uver Shallow.uver
+all: SepLogic.Heap.uver Shallow.uver SL.Heap.uver SL.Effect.uver	\
+	SL.Shallow.uver Examples.uver SL.Examples.custom		\
+	SL.ExamplesAuto.custom
+
+SL.ExamplesAuto.custom: OTHERFLAGS+=--cache_off
+
+#Excludes extracted interfaces for these examples
+%.custom: %.fst
+	$(FSTAR) --use_extracted_interfaces true $^
+
+%.fst-in:
+	@echo $(OTHERFLAGS)

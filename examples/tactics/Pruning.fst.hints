@@ -1,5 +1,5 @@
 [
-  "„Â&vçˇ=\f\r{’äüPYq",
+  "¢\u0015¢·◊xÎóŸÌSd‡ıÔ]",
   [
     [
       "Pruning.f",
@@ -23,10 +23,10 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "8d79cd24d352634f84de0ffb8bc6adf6"
+      "b2f0b90a3ebdb878e595c56663d0deae"
     ],
     [
-      "Pruning.uu___144",
+      "Pruning.uu___76",
       1,
       4,
       2,
@@ -41,10 +41,10 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "0bcca7a59b5df75d0dd9455fb5facb4b"
+      "e82311a7603e62f2c8efad5285ff811f"
     ],
     [
-      "Pruning.uu___145",
+      "Pruning.uu___77",
       1,
       4,
       2,
@@ -59,7 +59,52 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "24490fe3b122d9bcced9bb8cb7af2128"
+      "15f52df0b4b56e0fcd83889597b3d6cf"
+    ],
+    [
+      "Pruning.f",
+      2,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Addition" ],
+      0,
+      "357d2ea360d59cbb86c2103932781f02"
+    ],
+    [
+      "Pruning.uu___76",
+      2,
+      4,
+      2,
+      [
+        "@MaxFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.rev_acc.fuel_instrumented",
+        "@query", "constructor_distinct_Prims.Cons",
+        "constructor_distinct_Prims.Nil", "equation_FStar.List.Tot.Base.rev",
+        "equation_with_fuel_FStar.List.Tot.Base.rev_acc.fuel_instrumented",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
+      ],
+      0,
+      "3423c6b4d2fc02ce09e13f129715615b"
+    ],
+    [
+      "Pruning.uu___77",
+      2,
+      4,
+      2,
+      [
+        "@MaxFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.rev_acc.fuel_instrumented",
+        "@query", "constructor_distinct_Prims.Cons",
+        "constructor_distinct_Prims.Nil", "equation_FStar.List.Tot.Base.rev",
+        "equation_with_fuel_FStar.List.Tot.Base.rev_acc.fuel_instrumented",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
+      ],
+      0,
+      "832796a9362d08576ede8451acad04c6"
     ]
   ]
 ]

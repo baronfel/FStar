@@ -6,15 +6,6 @@
       1,
       2,
       1,
-      [ "@query" ],
-      0,
-      "3913480ef52bebf2fcf63ec55b02eea1"
-    ],
-    [
-      "Equivalence.if_left",
-      2,
-      2,
-      1,
       [
         "@query",
         "interpretation_Equivalence_Tm_abs_5646eff0017a4d35a78f1f3103e85ba6",
@@ -22,7 +13,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "da7374ea2cfa135f42357358c8096e64"
+      "68a6206d5ec60cfcb01b5c92145be07e"
     ],
     [
       "Equivalence.if_left_wp",
@@ -39,7 +30,24 @@
         "unit_typing"
       ],
       0,
-      "7124015b7d41f4d53d08f5bb2be25688"
+      "50e1afe3eec6bbe80ddac87abd6930f5"
+    ],
+    [
+      "Equivalence.if_left_wp",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "interpretation_Equivalence_Tm_abs_0fa59d72b49b5a2bc999d88ede729bfa",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Equivalence_Tm_refine_3bb8de9165e5ea42e5e07a8efedd0281",
+        "unit_typing"
+      ],
+      0,
+      "11c6834b47bcccca4ea3b6ea6a1ad9e5"
     ],
     [
       "Equivalence.if_left_wp'",
@@ -56,7 +64,33 @@
         "refinement_interpretation_Equivalence_Tm_refine_362a15a1e90690626f6a6a30d2273471"
       ],
       0,
-      "221492c0a77dae7b4f30d58c4507e022"
+      "144a0dc2018570b696e2d902961cdb96"
+    ],
+    [
+      "Equivalence.if_left_wp",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Equivalence_Tm_refine_3bb8de9165e5ea42e5e07a8efedd0281"
+      ],
+      0,
+      "c819321eb8ac582fbf43415e1d64bf31"
+    ],
+    [
+      "Equivalence.if_left_wp'",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Equivalence_Tm_refine_362a15a1e90690626f6a6a30d2273471"
+      ],
+      0,
+      "723c07a7a8a03d3b1fe37f8ae94b2714"
     ]
   ]
 ]

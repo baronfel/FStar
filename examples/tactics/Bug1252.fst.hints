@@ -1,5 +1,5 @@
 [
-  "¡\u0001K2πçZUÌW ‰\u0012ÔÜ.",
+  "\u001fÍ≤Ò-hπ.\u0006˝ßÍ≠ô5á",
   [
     [
       "Bug1252.f",
@@ -8,7 +8,16 @@
       1,
       [ "@query", "function_token_typing_Bug1252.p1" ],
       0,
-      "ef8d554b86a76ae90ad5b2edff617c91"
+      "318fe8c3dbcca09743937496365d6799"
+    ],
+    [
+      "Bug1252.f",
+      2,
+      2,
+      1,
+      [ "@query", "function_token_typing_Bug1252.p1" ],
+      0,
+      "c3a0868aa4d4f39bf8460b273829f570"
     ]
   ]
 ]

@@ -121,6 +121,7 @@ assume val ist_recall :  p:predicate heap{stable p heap_rel} ->
 
 (* References. *)
 
+let mref0 = mref
 type mref (a:Type) (r:preorder a) = m:mref a r{ist_witnessed (contains m)}
 
 

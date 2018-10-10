@@ -13,7 +13,7 @@ let rec sorted #a f l = match l with
   | x::[]    -> true
   | x::y::tl -> f x y && x <> y && sorted f (y::tl)
 
-abstract type ordset (a:Type u#a{hasEq a}) (f:cmp a) :Type u#a = l:(list a){sorted f l}
+abstract type ordset (a:eqtype) (f:cmp a) = l:(list a){sorted f l}
 
 val hasEq_ordset: a:eqtype -> f:cmp a -> Lemma (requires (True)) (ensures (hasEq (ordset a f))) [SMTPat (hasEq (ordset a f))]
 let hasEq_ordset a f = ()
@@ -78,6 +78,8 @@ let rec intersect #a #f s1 s2 = match s1 with
       insert' #_ #f hd (intersect #_ #f tl s2)
     else
       intersect #_ #f tl s2
+
+let disjoint #a #f (s1 s2 : ordset a f) : bool = intersect s1 s2 = empty
 
 let choose #a #f s = match s with
   | []   -> None
@@ -407,3 +409,52 @@ let lemma_intersect_union_empty (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:ordse
          (ensures  (intersect (union s1 s2) s3 == empty))
    [SMTPat (intersect (union s1 s2) s3)]
   = admit ()
+
+let lemma_intersect_union_empty' (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:ordset a f) (s3:ordset a f)
+  :Lemma (requires (intersect (union s1 s2) s3 == empty))
+         (ensures  (intersect s1 s3 == empty /\ intersect s2 s3 == empty))
+   [SMTPat (intersect (union s1 s2) s3)]
+  = admit ()
+
+let union_comm (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:ordset a f)
+  :Lemma (union s1 s2 == union s2 s1)
+         [SMTPat (union s1 s2)]
+  = admit ()
+
+let union_of_disj (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:ordset a f)
+ :Lemma (requires (disjoint s1 s2))
+        (ensures (minus (union s1 s2) s1 == s2))
+        [SMTPat (union s1 s2); SMTPat (disjoint s1 s2)]
+ = admit ()
+
+(* Conversion from OrdSet to Set *)
+
+module S = FStar.Set
+
+abstract val as_set : #a:eqtype -> #f:cmp a -> ordset a f -> S.set a
+
+let rec as_set #a #f s = 
+  match s with
+  | []     -> S.empty
+  | hd::tl -> S.union (S.singleton hd) (as_set #a #f tl)
+
+let rec lemma_as_set_mem (#a:eqtype) (#f:cmp a) (s:ordset a f) (x:a)
+  : Lemma (mem x s <==> S.mem x (as_set s))
+          [SMTPat (mem x s);
+           SMTPat (S.mem x (as_set s))]
+  = match s with
+    | []     -> ()
+    | hd::tl -> 
+        if x = hd 
+        then ()
+        else lemma_as_set_mem #a #f tl x
+
+let rec lemma_as_set_disjoint (#a:eqtype) (#f:cmp a) (s1 s2:ordset a f)
+  : Lemma (intersect s1 s2 = empty <==> S.disjoint (as_set s1) (as_set s2))
+          [SMTPat (S.disjoint (as_set s1) (as_set s2))]
+  = match s1 with
+    | []     -> ()
+    | hd::tl ->
+        if mem hd s2
+        then assert (S.mem hd (as_set s2))
+        else lemma_as_set_disjoint tl s2

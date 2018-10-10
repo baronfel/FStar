@@ -1,1 +1,33 @@
-[ "}›=Uﬂ˚ã¯Cﬁ˚—3¬T±", [] ]
+[
+  "ß\u000be√=ö¡l£Œk\u0014ﬂÅ5\t",
+  [
+    [
+      "Unit1.UnificationTests.t_indexed",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Unit1.UnificationTests.X",
+        "disc_equation_Unit1.UnificationTests.Y",
+        "fuel_guarded_inversion_Unit1.UnificationTests.some_enum"
+      ],
+      0,
+      "d76c5176f716affb7bd314edecf2fe13"
+    ],
+    [
+      "Unit1.UnificationTests.t_indexed",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Unit1.UnificationTests.X",
+        "disc_equation_Unit1.UnificationTests.Y",
+        "fuel_guarded_inversion_Unit1.UnificationTests.some_enum"
+      ],
+      0,
+      "3a8a8d54654beb97729e073113690104"
+    ]
+  ]
+]

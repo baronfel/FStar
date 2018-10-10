@@ -19,16 +19,20 @@ dm4free \
 incl \
 struct \
 micro-benchmarks \
-bytes \
 tactics \
-pattern-matching \
+typeclasses \
+miniparse \
 kv_parsing \
 lowparse \
+low-mitls-experiments \
 vale \
 seplogic \
+csl \
 hello \
 native_tactics \
-extraction
+extraction \
+demos \
+indexed_effects
 
 # low-level \  ... NS: removing from CI for this branch
 

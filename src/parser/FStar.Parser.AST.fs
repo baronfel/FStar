@@ -31,21 +31,14 @@ open FStar.Const
    expressions, formulas, types, and so on
  *)
 type level = | Un | Expr | Type_level | Kind | Formula
-type imp =
-    | FsTypApp
-    | Hash
-    | UnivApp
-    | Nothing
-type arg_qualifier =
-    | Implicit
-    | Equality
-type aqual = option<arg_qualifier>
 
-// let rec mutable makes no sense, so just don't do it
 type let_qualifier =
   | NoLetQualifier
   | Rec
-  | Mutable
+
+type quote_kind =
+  | Static
+  | Dynamic
 
 type term' =
   | Wild
@@ -73,7 +66,7 @@ type term' =
   | Record    of option<term> * list<(lid * term)>
   | Project   of term * lid
   | Product   of list<binder> * term                 (* function space *)
-  | Sum       of list<binder> * term                 (* dependent tuple *)
+  | Sum       of list<(either<binder,term>)> * term                 (* dependent tuple *)
   | QForall   of list<binder> * list<list<term>> * term
   | QExists   of list<binder> * list<list<term>> * term
   | Refine    of binder * term
@@ -84,6 +77,9 @@ type term' =
   | Labeled   of term * string * bool
   | Discrim   of lid   (* Some?  (formerly is_Some) *)
   | Attributes of list<term>   (* attributes decorating a term *)
+  | Antiquote of term  (* Antiquotation within a quoted term *)
+  | Quote     of term * quote_kind
+  | VQuote    of term        (* Quoting an lid, this gets removed by the desugarer *)
 
 and term = {tm:term'; range:range; level:level}
 
@@ -99,21 +95,32 @@ and binder' =
 and binder = {b:binder'; brange:range; blevel:level; aqual:aqual}
 
 and pattern' =
-  | PatWild
+  | PatWild     of aqual
   | PatConst    of sconst
   | PatApp      of pattern * list<pattern>
-  | PatVar      of ident * option<arg_qualifier>
+  | PatVar      of ident * aqual
   | PatName     of lid
-  | PatTvar     of ident * option<arg_qualifier>
+  | PatTvar     of ident * aqual
   | PatList     of list<pattern>
   | PatTuple    of list<pattern> * bool (* dependent if flag is set *)
   | PatRecord   of list<(lid * pattern)>
-  | PatAscribed of pattern * term
+  | PatAscribed of pattern * (term * option<term>)
   | PatOr       of list<pattern>
   | PatOp       of ident
 and pattern = {pat:pattern'; prange:range}
 
 and branch = (pattern * option<term> * term)
+and arg_qualifier =
+    | Implicit
+    | Equality
+    | Meta of term
+and aqual = option<arg_qualifier>
+and imp =
+    | FsTypApp
+    | Hash
+    | UnivApp
+    | HashBrace of term
+    | Nothing
 
 type knd = term
 type typ = term
@@ -131,7 +138,7 @@ type tycon =
   | TyconAbstract of ident * list<binder> * option<knd>
   | TyconAbbrev   of ident * list<binder> * option<knd> * term
   | TyconRecord   of ident * list<binder> * option<knd> * list<(ident * term * option<fsdoc>)>
-  | TyconVariant  of ident * list<binder> * option<knd> * list<(ident * option<term> * option<fsdoc> * bool)> (* using 'of' notion *)
+  | TyconVariant  of ident * list<binder> * option<knd> * list<(ident * option<term> * option<fsdoc> * bool)> (* bool is whether it's using 'of' notation *)
 
 type qualifier =
   | Private
@@ -176,17 +183,21 @@ type lift = {
 type pragma =
   | SetOptions of string
   | ResetOptions of option<string>
+  | PushOptions of option<string>
+  | PopOptions
   | LightOff
 
 type decl' =
   | TopLevelModule of lid
   | Open of lid
+  | Friend of lid
   | Include of lid
   | ModuleAbbrev of ident * lid
   | TopLevelLet of let_qualifier * list<(pattern * term)>
   | Main of term
-  | Tycon of bool * list<(tycon * option<fsdoc>)>
-    (* bool is for effect *)
+  | Tycon of bool * bool * list<(tycon * option<fsdoc>)>
+    (* first bool is for effect *)
+    (* second bool is for typeclass *)
   | Val of ident * term  (* bool is for logic val *)
   | Exception of ident * option<term>
   | NewEffect of effect_decl
@@ -194,6 +205,7 @@ type decl' =
   | Pragma of pragma
   | Fsdoc of fsdoc
   | Assume of ident * term
+  | Splice of list<ident> * term
 
 and decl = {
   d:decl';
@@ -322,7 +334,7 @@ let mkAdmitMagic r =
     let admit_magic = mk_term(Seq(admit, magic)) r Expr in
     admit_magic
 
-let mkWildAdmitMagic r = (mk_pattern PatWild r, None, mkAdmitMagic r)
+let mkWildAdmitMagic r = (mk_pattern (PatWild None) r, None, mkAdmitMagic r)
 
 let focusBranches branches r =
     let should_filter = Util.for_some fst branches in
@@ -390,7 +402,7 @@ let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
                         let x_var = mk_term (Var (lid_of_ids [x])) phi.range Formula in
                         let pat_branch = (pat, None, phi)in
                         let otherwise_branch =
-                            (mk_pattern PatWild phi.range, None,
+                            (mk_pattern (PatWild None) phi.range, None,
                              mk_term (Name (lid_of_path ["False"] phi.range)) phi.range Formula)
                         in
                         mk_term (Match (x_var, [pat_branch ; otherwise_branch])) phi.range Formula
@@ -401,7 +413,7 @@ let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
                 let x = gen t.range in
                 mk_term (Refine(mk_binder (Annotated (x, t)) t_range Type_level None, phi)) range Type_level
      in
-     mk_pattern (PatAscribed(pat, t)) range
+     mk_pattern (PatAscribed(pat, (t, None))) range
 
 let rec extract_named_refinement t1  =
     match t1.tm with
@@ -505,7 +517,6 @@ let string_of_fsdoc (comment,keywords) =
 let string_of_let_qualifier = function
   | NoLetQualifier -> ""
   | Rec -> "rec"
-  | Mutable -> "mutable"
 let to_string_l sep f l =
   String.concat sep (List.map f l)
 let imp_to_string = function
@@ -577,7 +588,10 @@ let rec term_to_string (x:term) = match x.tm with
   | Product([b], t) when (x.level = Kind) ->
     Util.format2 "%s => %s" (b|> binder_to_string) (t|> term_to_string)
   | Sum(binders, t) ->
-    Util.format2 "%s * %s" (binders |> (List.map binder_to_string) |> String.concat " * " ) (t|> term_to_string)
+    (binders@[Inr t]) |>
+    List.map (function Inl b -> binder_to_string b
+                     | Inr t -> term_to_string t) |>
+    String.concat " & "
   | QForall(bs, pats, t) ->
     Util.format3 "forall %s.{:pattern %s} %s"
       (to_string_l " " binder_to_string bs)
@@ -613,7 +627,8 @@ and aqual_to_string = function
   | _ -> ""
 
 and pat_to_string x = match x.pat with
-  | PatWild -> "_"
+  | PatWild None -> "_"
+  | PatWild _ -> "#_"
   | PatConst c -> C.const_to_string c
   | PatApp(p, ps) -> Util.format2 "(%s %s)" (p |> pat_to_string) (to_string_l " " pat_to_string ps)
   | PatTvar (i, aq)
@@ -625,7 +640,8 @@ and pat_to_string x = match x.pat with
   | PatRecord l -> Util.format1 "{%s}" (to_string_l "; " (fun (f,e) -> Util.format2 "%s=%s" (f.str) (e |> pat_to_string)) l)
   | PatOr l ->  to_string_l "|\n " pat_to_string l
   | PatOp op ->  Util.format1 "(%s)" (Ident.text_of_id op)
-  | PatAscribed(p,t) -> Util.format2 "(%s:%s)" (p |> pat_to_string) (t |> term_to_string)
+  | PatAscribed(p,(t, None)) -> Util.format2 "(%s:%s)" (p |> pat_to_string) (t |> term_to_string)
+  | PatAscribed(p,(t, Some tac)) -> Util.format3 "(%s:%s by %s)" (p |> pat_to_string) (t |> term_to_string) (tac |> term_to_string)
 
 and attrs_opt_to_string = function
   | None -> ""
@@ -649,16 +665,18 @@ let id_of_tycon = function
 let decl_to_string (d:decl) = match d.d with
   | TopLevelModule l -> "module " ^ l.str
   | Open l -> "open " ^ l.str
+  | Friend l -> "friend " ^ l.str
   | Include l -> "include " ^ l.str
   | ModuleAbbrev (i, l) -> Util.format2 "module %s = %s" i.idText l.str
   | TopLevelLet(_, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> l.str) |> String.concat ", ")
   | Main _ -> "main ..."
   | Assume(i, _) -> "assume " ^ i.idText
-  | Tycon(_, tys) -> "type " ^ (tys |> List.map (fun (x,_)->id_of_tycon x) |> String.concat ", ")
+  | Tycon(_, _, tys) -> "type " ^ (tys |> List.map (fun (x,_)->id_of_tycon x) |> String.concat ", ")
   | Val(i, _) -> "val " ^ i.idText
   | Exception(i, _) -> "exception " ^ i.idText
   | NewEffect(DefineEffect(i, _, _, _))
   | NewEffect(RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
+  | Splice (ids, t) -> "splice[" ^ (String.concat ";" <| List.map (fun i -> i.idText) ids) ^ "] (" ^ term_to_string t ^ ")"
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
   | Fsdoc _ -> "fsdoc"

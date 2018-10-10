@@ -51,29 +51,16 @@ private abstract let rec init_aux (#a:Type) (len:nat) (k:nat{k < len}) (contents
 inline_for_extraction abstract val init: #a:Type -> len:nat -> contents: (i:nat { i < len } -> Tot a) -> Tot (seq a)
 inline_for_extraction abstract let init #a len contents = if len = 0 then MkSeq [] else init_aux len 0 contents
 
-abstract val of_list: #a:Type -> list a -> Tot (seq a)
-let of_list #a l = MkSeq l
+abstract
+let empty #a : Tot (s:(seq a){length s=0}) = MkSeq []
 
-abstract val lemma_of_list_length: #a:Type -> s:seq a -> l:list a -> Lemma
-  (requires (s == of_list #a l))
-  (ensures (length s = List.length l))
-  [SMTPat (length s = List.length l)]
-let lemma_of_list_length #a s l  = ()
+[@(deprecated "Seq.empty")]
+unfold
+let createEmpty (#a:Type)
+    : Tot (s:(seq a){length s=0})
+    = empty #a
 
-abstract val lemma_of_list: #a:Type -> s:seq a -> l:list a -> i:nat{i < length s} -> Lemma
-  (requires (s == of_list l))
-  (ensures (s == of_list l /\ List.length l = length s /\ index s i == List.index l i))
-  [SMTPat (index s i == List.index l i)]
-let lemma_of_list #a s l i = ()
-
-private val exFalso0 : a:Type -> n:nat{n<0} -> Tot a
-let exFalso0 a n = ()
-
-(* CH: Seq.empty or emptySeq would be a better name for this? *)
-abstract val createEmpty: #a:Type -> Tot (s:(seq a){length s=0})
-let createEmpty #a = MkSeq []
-
-let lemma_empty (#a:Type) (s:seq a) : Lemma (length s = 0 ==> s == createEmpty #a) = ()
+let lemma_empty (#a:Type) (s:seq a) : Lemma (length s = 0 ==> s == empty #a) = ()
 
 abstract val upd: #a:Type -> s:seq a -> n:nat{n < length s} -> a ->  Tot (seq a) (decreases (length s))
 let rec upd #a s n v = if n = 0 then cons v (tl s) else cons (hd s) (upd (tl s) (n - 1) v)
@@ -191,7 +178,7 @@ let rec lemma_index_slice #a s i j k =
 val hasEq_lemma: a:Type -> Lemma (requires (hasEq a)) (ensures (hasEq (seq a))) [SMTPat (hasEq  (seq a))]
 let hasEq_lemma a = ()
 
-abstract type equal (#a:Type) (s1:seq a) (s2:seq a) :Type0 =
+abstract type equal (#a:Type) (s1:seq a) (s2:seq a) =
   (length s1 = length s2
    /\ (forall (i:nat{i < length s1}).{:pattern (index s1 i); (index s2 i)} (index s1 i == index s2 i)))
 
@@ -247,14 +234,14 @@ abstract let append_empty_l
   (#a: Type)
   (s: seq a)
 : Lemma
-  (ensures (append createEmpty s == s))
+  (ensures (append empty s == s))
 = List.append_nil_l (MkSeq?.l s)
 
 abstract let append_empty_r
   (#a: Type)
   (s: seq a)
 : Lemma
-  (ensures (append s createEmpty == s))
+  (ensures (append s empty == s))
 = List.append_l_nil (MkSeq?.l s)
 
 
@@ -262,7 +249,6 @@ abstract
 val init_index (#a:Type) (len:nat) (contents:(i:nat { i < len } -> Tot a))
   : Lemma (requires True)
     (ensures (forall (i:nat{i < len}). index (init len contents) i == contents i))
-    [SMTPat (index (init len contents))]
 
 private
 let rec init_index_aux (#a:Type) (len:nat) (k:nat{k < len}) (contents:(i:nat { i < len } -> Tot a))
@@ -281,3 +267,17 @@ let rec init_index_aux (#a:Type) (len:nat) (k:nat{k < len}) (contents:(i:nat { i
 
 let init_index #a len contents =
   if len = 0 then () else init_index_aux #a len 0 contents
+
+abstract
+let init_index_ (#a:Type) (len:nat) (contents:(i:nat { i < len } -> Tot a)) (j: nat)
+  : Lemma (requires j < len)
+    (ensures (index (init len contents) j == contents j))
+    [SMTPat (index (init len contents) j)]
+=
+  init_index len contents
+
+let lemma_equal_instances_implies_equal_types ()
+  :Lemma (forall (a:Type) (b:Type) (s1:seq a) (s2:seq b). s1 === s2 ==> a == b)
+  = ()
+
+

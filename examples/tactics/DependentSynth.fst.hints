@@ -1,18 +1,6 @@
 [
-  "\u001d•É¬Ò\u0019(Ú3¥à\u001eKé\u001b”",
+  "çü2í/v}smÿ~âÛ#0Œ",
   [
-    [
-      "DependentSynth.myty",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
-      ],
-      0,
-      "cde33d965f66e13cacc7d9b5385dc1f6"
-    ],
     [
       "DependentSynth.f",
       1,
@@ -20,11 +8,22 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "equation_DependentSynth.myty", "int_typing",
-        "projection_inverse_BoxBool_proj_0", "unit_typing"
+        "equation_DependentSynth.myty", "int_typing", "unit_typing"
       ],
       0,
-      "852f04f93bf243f103e82300e5216585"
+      "abc4ec3aca77c819b5c639644a8a50e0"
+    ],
+    [
+      "DependentSynth.f",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_DependentSynth.myty", "int_typing", "unit_typing"
+      ],
+      0,
+      "92f84da6b713a2e05da8409cbf6bde00"
     ]
   ]
 ]

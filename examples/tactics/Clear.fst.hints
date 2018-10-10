@@ -1,23 +1,18 @@
 [
-  "\u0010&ò|®‰ª\"Uï\u000f‚ç\u001e\u0001¶",
+  "ÑofTŸ~|D|1í*°.…∏",
   [
-    [
-      "Clear.clear_all_of_type",
-      1,
-      2,
-      1,
-      [ "@query", "equation_FStar.Tactics.Derived.idtac" ],
-      0,
-      "743ff047257531a1a91195edab9ca229"
-    ],
     [
       "Clear.l2",
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "function_token_typing_Clear.p",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
       0,
-      "772c28fc735d2c77ac12888632449796"
+      "5f8d04368fa130dfea20eff84824a0bc"
     ],
     [
       "Clear.l2",
@@ -30,16 +25,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "603fe4eff34e95657edd594bad940c5d"
-    ],
-    [
-      "Clear.l2",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "32b5b84f135b6889c3783714d62be2b1"
+      "d2078ca8375cee264d5e81fb360fc2ea"
     ]
   ]
 ]

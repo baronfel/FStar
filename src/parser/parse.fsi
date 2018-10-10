@@ -23,11 +23,13 @@ type token =
   | TOTAL
   | TILDE of (string)
   | THEN
+  | SYNTH
   | SUB_EFFECT
   | SUBTYPE
   | SUBKIND
   | STRING of (string)
   | SQUIGGLY_RARROW
+  | SPLICE
   | SET_RANGE_OF
   | SEMICOLON_SEMICOLON
   | SEMICOLON
@@ -42,11 +44,14 @@ type token =
   | RARROW
   | RANGE_OF
   | RANGE of (string)
+  | QUOTE
   | QMARK_DOT
   | QMARK
   | PRIVATE
   | PRAGMA_SET_OPTIONS
   | PRAGMA_RESET_OPTIONS
+  | PRAGMA_PUSH_OPTIONS
+  | PRAGMA_POP_OPTIONS
   | PRAGMALIGHT
   | PIPE_RIGHT
   | PERCENT_LBRACK
@@ -69,7 +74,6 @@ type token =
   | NEW_EFFECT
   | NEW
   | NAME of (string)
-  | MUTABLE
   | MODULE
   | MINUS
   | MATCH
@@ -92,6 +96,7 @@ type token =
   | INT32 of (string * bool)
   | INT16 of (string * bool)
   | INT of (string * bool)
+  | INSTANCE
   | INLINE_FOR_EXTRACTION
   | INLINE
   | INCLUDE
@@ -106,6 +111,7 @@ type token =
   | FUN
   | FSDOC_STANDALONE of (fsdoc)
   | FSDOC of (fsdoc)
+  | FRIEND
   | FORALL
   | FALSE
   | EXISTS
@@ -129,6 +135,7 @@ type token =
   | COLON_EQUALS
   | COLON_COLON
   | COLON
+  | CLASS
   | CHAR of (char)
   | BYTEARRAY of (bytes)
   | BY
@@ -136,6 +143,9 @@ type token =
   | BAR_RBRACK
   | BAR
   | BANG_LBRACE
+  | BACKTICK_PERC
+  | BACKTICK_HASH
+  | BACKTICK_AT
   | BACKTICK
   | ATTRIBUTES
   | ASSUME
@@ -165,11 +175,13 @@ type tokenId =
     | TOKEN_TOTAL
     | TOKEN_TILDE
     | TOKEN_THEN
+    | TOKEN_SYNTH
     | TOKEN_SUB_EFFECT
     | TOKEN_SUBTYPE
     | TOKEN_SUBKIND
     | TOKEN_STRING
     | TOKEN_SQUIGGLY_RARROW
+    | TOKEN_SPLICE
     | TOKEN_SET_RANGE_OF
     | TOKEN_SEMICOLON_SEMICOLON
     | TOKEN_SEMICOLON
@@ -184,11 +196,14 @@ type tokenId =
     | TOKEN_RARROW
     | TOKEN_RANGE_OF
     | TOKEN_RANGE
+    | TOKEN_QUOTE
     | TOKEN_QMARK_DOT
     | TOKEN_QMARK
     | TOKEN_PRIVATE
     | TOKEN_PRAGMA_SET_OPTIONS
     | TOKEN_PRAGMA_RESET_OPTIONS
+    | TOKEN_PRAGMA_PUSH_OPTIONS
+    | TOKEN_PRAGMA_POP_OPTIONS
     | TOKEN_PRAGMALIGHT
     | TOKEN_PIPE_RIGHT
     | TOKEN_PERCENT_LBRACK
@@ -211,7 +226,6 @@ type tokenId =
     | TOKEN_NEW_EFFECT
     | TOKEN_NEW
     | TOKEN_NAME
-    | TOKEN_MUTABLE
     | TOKEN_MODULE
     | TOKEN_MINUS
     | TOKEN_MATCH
@@ -234,6 +248,7 @@ type tokenId =
     | TOKEN_INT32
     | TOKEN_INT16
     | TOKEN_INT
+    | TOKEN_INSTANCE
     | TOKEN_INLINE_FOR_EXTRACTION
     | TOKEN_INLINE
     | TOKEN_INCLUDE
@@ -248,6 +263,7 @@ type tokenId =
     | TOKEN_FUN
     | TOKEN_FSDOC_STANDALONE
     | TOKEN_FSDOC
+    | TOKEN_FRIEND
     | TOKEN_FORALL
     | TOKEN_FALSE
     | TOKEN_EXISTS
@@ -271,6 +287,7 @@ type tokenId =
     | TOKEN_COLON_EQUALS
     | TOKEN_COLON_COLON
     | TOKEN_COLON
+    | TOKEN_CLASS
     | TOKEN_CHAR
     | TOKEN_BYTEARRAY
     | TOKEN_BY
@@ -278,6 +295,9 @@ type tokenId =
     | TOKEN_BAR_RBRACK
     | TOKEN_BAR
     | TOKEN_BANG_LBRACE
+    | TOKEN_BACKTICK_PERC
+    | TOKEN_BACKTICK_HASH
+    | TOKEN_BACKTICK_AT
     | TOKEN_BACKTICK
     | TOKEN_ATTRIBUTES
     | TOKEN_ASSUME
@@ -295,19 +315,21 @@ type nonTerminalId =
     | NONTERM_option___anonymous_1_
     | NONTERM_option___anonymous_2_
     | NONTERM_option___anonymous_5_
-    | NONTERM_option___anonymous_7_
+    | NONTERM_option___anonymous_6_
+    | NONTERM_option___anonymous_8_
+    | NONTERM_option___anonymous_9_
     | NONTERM_option_ascribeKind_
     | NONTERM_option_ascribeTyp_
     | NONTERM_option_fsTypeArgs_
-    | NONTERM_option_mainDecl_
     | NONTERM_option_pair_hasSort_simpleTerm__
     | NONTERM_option_string_
     | NONTERM_boption_SQUIGGLY_RARROW_
     | NONTERM_boption___anonymous_0_
     | NONTERM_loption_separated_nonempty_list_COMMA_appTerm__
+    | NONTERM_loption_separated_nonempty_list_SEMICOLON_lidentOrOperator__
     | NONTERM_loption_separated_nonempty_list_SEMICOLON_tuplePattern__
+    | NONTERM_list___anonymous_10_
     | NONTERM_list___anonymous_4_
-    | NONTERM_list___anonymous_8_
     | NONTERM_list_argTerm_
     | NONTERM_list_atomicTerm_
     | NONTERM_list_attr_letbinding_
@@ -334,13 +356,14 @@ type nonTerminalId =
     | NONTERM_separated_nonempty_list_SEMICOLON_appTerm_
     | NONTERM_separated_nonempty_list_SEMICOLON_effectDecl_
     | NONTERM_separated_nonempty_list_SEMICOLON_fieldPattern_
+    | NONTERM_separated_nonempty_list_SEMICOLON_lidentOrOperator_
     | NONTERM_separated_nonempty_list_SEMICOLON_tuplePattern_
     | NONTERM_inputFragment
-    | NONTERM_mainDecl
     | NONTERM_pragma
     | NONTERM_attribute
     | NONTERM_decoration
     | NONTERM_decl
+    | NONTERM_typeclassDecl
     | NONTERM_rawDecl
     | NONTERM_typeDecl
     | NONTERM_typars
@@ -381,6 +404,10 @@ type nonTerminalId =
     | NONTERM_lident
     | NONTERM_uident
     | NONTERM_tvar
+    | NONTERM_thunk_atomicTerm_
+    | NONTERM_thunk_tmNoEq_
+    | NONTERM_thunk_typ_
+    | NONTERM_thunk2_typ_
     | NONTERM_ascribeTyp
     | NONTERM_ascribeKind
     | NONTERM_kind
@@ -397,11 +424,19 @@ type nonTerminalId =
     | NONTERM_tmImplies
     | NONTERM_tmArrow_tmFormula_
     | NONTERM_tmArrow_tmNoEq_
+    | NONTERM_simpleArrow
+    | NONTERM_simpleArrowDomain
     | NONTERM_tmFormula
     | NONTERM_tmConjunction
     | NONTERM_tmTuple
+    | NONTERM_tmEqWith_appTerm_
+    | NONTERM_tmEqWith_tmRefinement_
+    | NONTERM_tmNoEqWith_appTerm_
+    | NONTERM_tmNoEqWith_tmRefinement_
+    | NONTERM_tmEqNoRefinement
     | NONTERM_tmEq
     | NONTERM_tmNoEq
+    | NONTERM_tmRefinement
     | NONTERM_refineOpt
     | NONTERM_recordExp
     | NONTERM_simpleDef
@@ -432,7 +467,7 @@ type nonTerminalId =
     | NONTERM_right_flexible_list_SEMICOLON_simpleDef_
     | NONTERM_right_flexible_nonempty_list_SEMICOLON_recordFieldDecl_
     | NONTERM_right_flexible_nonempty_list_SEMICOLON_simpleDef_
-    | NONTERM_reverse_left_flexible_list_BAR___anonymous_6_
+    | NONTERM_reverse_left_flexible_list_BAR___anonymous_7_
     | NONTERM_reverse_left_flexible_nonempty_list_BAR_patternBranch_
 /// This function maps tokens to integer indexes
 val tagOfToken: token -> int

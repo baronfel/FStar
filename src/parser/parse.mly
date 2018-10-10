@@ -1,6 +1,6 @@
 %{
 (*
- We are expected to have only 7 shift-reduce conflicts.
+ We are expected to have only 5 shift-reduce conflicts.
  A lot (176) of end-of-stream conflicts are also reported and
  should be investigated...
 *)
@@ -20,6 +20,10 @@ open FStar_Parser_Util
 open FStar_Const
 open FStar_Ident
 open FStar_String
+
+let logic_qualifier_deprecation_warning =
+  "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue"
+
 %}
 
 %token <bytes> BYTEARRAY
@@ -50,12 +54,12 @@ open FStar_String
 %token FORALL EXISTS ASSUME NEW LOGIC ATTRIBUTES
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT UNFOLD INLINE_FOR_EXTRACTION
 %token NOEXTRACT
-%token NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
+%token NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS PRAGMA_PUSH_OPTIONS PRAGMA_POP_OPTIONS
 %token TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND BY
-%token AND ASSERT BEGIN ELSE END
+%token AND ASSERT SYNTH BEGIN ELSE END
 %token EXCEPTION FALSE FUN FUNCTION IF IN MODULE DEFAULT
 %token MATCH OF
-%token OPEN REC MUTABLE THEN TRUE TRY TYPE EFFECT VAL
+%token FRIEND OPEN REC THEN TRUE TRY TYPE CLASS INSTANCE EFFECT VAL
 %token INCLUDE
 %token WHEN WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
@@ -66,10 +70,11 @@ open FStar_String
 %token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
 %token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN PIPE_RIGHT
-%token NEW_EFFECT SUB_EFFECT SQUIGGLY_RARROW TOTAL
+%token NEW_EFFECT SUB_EFFECT SPLICE SQUIGGLY_RARROW TOTAL
 %token REQUIRES ENSURES
-%token MINUS COLON_EQUALS
+%token MINUS COLON_EQUALS QUOTE BACKTICK_AT BACKTICK_HASH
 %token BACKTICK UNIV_HASH
+%token BACKTICK_PERC
 
 %token<string>  OPPREFIX OPINFIX0a OPINFIX0b OPINFIX0c OPINFIX0d OPINFIX1 OPINFIX2 OPINFIX3 OPINFIX4
 %token<string>  OP_MIXFIX_ASSIGNMENT OP_MIXFIX_ACCESS
@@ -91,9 +96,9 @@ open FStar_String
 %left     OPINFIX0d
 %left     PIPE_RIGHT
 %right    OPINFIX1
-%left     OPINFIX2 MINUS
+%left     OPINFIX2 MINUS QUOTE
 %left     OPINFIX3
-%left     BACKTICK
+%left     BACKTICK BACKTICK_AT BACKTICK_HASH
 %right    OPINFIX4
 
 %start inputFragment
@@ -122,6 +127,10 @@ pragma:
       { SetOptions s }
   | PRAGMA_RESET_OPTIONS s_opt=string?
       { ResetOptions s_opt }
+  | PRAGMA_PUSH_OPTIONS s_opt=string?
+      { PushOptions s_opt }
+  | PRAGMA_POP_OPTIONS
+      { PopOptions }
 
 attribute:
   | LBRACK_AT x = list(atomicTerm) RBRACK
@@ -142,11 +151,46 @@ decl:
   | ds=list(decoration) decl=rawDecl
       { mk_decl decl (rhs parseState 2) ds }
 
+  | ds=list(decoration) decl=typeclassDecl
+      { let (decl, extra_attrs) = decl in
+        let d = mk_decl decl (rhs parseState 2) ds in
+        { d with attrs = extra_attrs @ d.attrs }
+      }
+
+typeclassDecl:
+  | CLASS tcdef=pair(option(FSDOC), typeDecl)
+      {
+        (* Only a single type decl allowed, but construct it the same as for multiple ones.
+         * Only difference is the `true` below marking that this a class so desugaring
+         * adds the needed %splice. *)
+        let flip (a,b) = (b,a) in
+        let tcdef = flip tcdef in
+        let d = Tycon (false, true, [tcdef]) in
+
+        (* No attrs yet, but perhaps we want a `class` attribute *)
+        (d, [])
+      }
+
+  | INSTANCE q=letqualifier lb=letbinding
+      {
+        (* Making a single letbinding *)
+        let r = rhs2 parseState 1 3 in
+        let lbs = focusLetBindings [lb] r in (* lbs is a singleton really *)
+        let d = TopLevelLet(q, lbs) in
+
+        (* Slapping a `tcinstance` attribute to it *)
+        let at = mk_term (Var tcinstance_lid) r Type_level in
+
+        (d, [at])
+      }
+
 rawDecl:
   | p=pragma
       { Pragma p }
   | OPEN uid=quident
       { Open uid }
+  | FRIEND uid=quident
+      { Friend uid }
   | INCLUDE uid=quident
       { Include uid }
   | MODULE uid1=uident EQUALS uid2=quident
@@ -154,9 +198,9 @@ rawDecl:
   | MODULE uid=quident
       {  TopLevelModule uid }
   | TYPE tcdefs=separated_nonempty_list(AND,pair(option(FSDOC), typeDecl))
-      { Tycon (false, List.map (fun (doc, f) -> (f, doc)) tcdefs) }
+      { Tycon (false, false, List.map (fun (doc, f) -> (f, doc)) tcdefs) }
   | EFFECT uid=uident tparams=typars EQUALS t=typ
-      { Tycon(true, [(TyconAbbrev(uid, tparams, None, t), None)]) }
+      { Tycon(true, false, [(TyconAbbrev(uid, tparams, None, t), None)]) }
   | LET q=letqualifier lbs=separated_nonempty_list(AND, letbinding)
       {
         let r = rhs2 parseState 1 3 in
@@ -172,6 +216,8 @@ rawDecl:
           | bs -> mk_term (Product(bs, t)) (rhs2 parseState 3 5) Type_level
         in Val(lid, t)
       }
+  | SPLICE LBRACK ids=separated_list(SEMICOLON, lidentOrOperator) RBRACK t=thunk(atomicTerm)
+      { Splice (ids, t) }
   | EXCEPTION lid=uident t_opt=option(OF t=typ {t})
       { Exception(lid, t_opt) }
   | NEW_EFFECT ne=newEffect
@@ -255,7 +301,7 @@ effectDefinition:
 
 effectDecl:
   | lid=lident action_params=binders EQUALS t=simpleTerm
-    { mk_decl (Tycon (false, [TyconAbbrev(lid, action_params, None, t), None])) (rhs2 parseState 1 3) [] }
+    { mk_decl (Tycon (false, false, [TyconAbbrev(lid, action_params, None, t), None])) (rhs2 parseState 1 3) [] }
 
 subEffect:
   | src_eff=quident SQUIGGLY_RARROW tgt_eff=quident EQUALS lift=simpleTerm
@@ -315,7 +361,9 @@ qualifier:
   | NOEQUALITY    { Noeq }
   | UNOPTEQUALITY { Unopteq }
   | NEW           { New }
-  | LOGIC         { Logic }
+  | LOGIC         { log_issue (lhs parseState) (Warning_logicqualifier,
+                                                logic_qualifier_deprecation_warning);
+                    Logic }
   | OPAQUE        { Opaque }
   | REIFIABLE     { Reifiable }
   | REFLECTABLE   { Reflectable }
@@ -325,7 +373,6 @@ maybeFocus:
 
 letqualifier:
   | REC         { Rec }
-  | MUTABLE     { Mutable }
   |             { NoLetQualifier }
 
  (* Remove with stratify *)
@@ -335,6 +382,7 @@ aqual:
   | q=aqualUniverses { q }
 
 aqualUniverses:
+  | HASH LBRACK t=thunk(tmNoEq) RBRACK { Meta t }
   | HASH      { Implicit }
   | DOLLAR    { Equality }
 
@@ -379,9 +427,9 @@ atomicPattern:
   | LPAREN op=operator RPAREN
       { mk_pattern (PatOp op) (rhs2 parseState 1 3) }
   | UNDERSCORE
-      { mk_pattern PatWild (rhs parseState 1) }
+      { mk_pattern (PatWild None) (rhs parseState 1) }
   | HASH UNDERSCORE
-      { mk_pattern (PatVar (gen (rhs2 parseState 1 2), Some Implicit)) (rhs parseState 1) }
+      { mk_pattern (PatWild (Some Implicit)) (rhs parseState 1) }
   | c=constant
       { mk_pattern (PatConst c) (rhs parseState 1) }
   | qual_id=aqualified(lident)
@@ -399,6 +447,29 @@ fieldPattern:
   (* we do *NOT* allow _ in multibinder () since it creates reduce/reduce conflicts when*)
   (* preprocessing to ocamlyacc/fsyacc (which is expected since the macro are expanded) *)
 patternOrMultibinder:
+  | LBRACK_BAR UNDERSCORE COLON t=simpleArrow BAR_RBRACK
+      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
+        let w = mk_pattern (PatWild (Some (Meta mt)))
+                                 (rhs2 parseState 1 5) in
+        let asc = (t, None) in
+        [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
+      }
+
+  | LBRACK_BAR i=lident COLON t=simpleArrow BAR_RBRACK
+      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
+        let w = mk_pattern (PatVar (i, Some (Meta mt)))
+                                 (rhs2 parseState 1 5) in
+        let asc = (t, None) in
+        [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
+      }
+
+  | LBRACK_BAR t=simpleArrow BAR_RBRACK
+      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 2) Type_level in
+        let w = mk_pattern (PatVar (gen (rhs2 parseState 1 3), Some (Meta mt)))
+                                 (rhs2 parseState 1 3) in
+        let asc = (t, None) in
+        [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 3)]
+      }
   | pat=atomicPattern { [pat] }
   | LPAREN qual_id0=aqualified(lident) qual_ids=nonempty_list(aqualified(lident)) COLON t=simpleArrow r=refineOpt RPAREN
       {
@@ -470,8 +541,16 @@ tvar:
 /*                            Types and terms                                 */
 /******************************************************************************/
 
+thunk(X): | t=X { mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr }
+
+thunk2(X):
+  | t=X
+     { let u = mk_term (Const Const_unit) (rhs parseState 3) Expr in
+       let t = mk_term (Seq (u, t)) (rhs parseState 3) Expr in
+       mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr }
+
 ascribeTyp:
-  | COLON t=tmArrow(tmNoEq) { t }
+  | COLON t=tmArrow(tmNoEq) tacopt=option(BY tactic=thunk(atomicTerm) {tactic}) { t, tacopt }
 
 (* Remove for stratify *)
 ascribeKind:
@@ -502,7 +581,7 @@ term:
 
 noSeqTerm:
   | t=typ  { t }
-  | e=tmIff SUBTYPE t=tmIff tactic_opt=option(BY tactic=typ {tactic})
+  | e=tmIff SUBTYPE t=tmIff tactic_opt=option(BY tactic=thunk(typ) {tactic})
       { mk_term (Ascribed(e,{t with level=Expr},tactic_opt)) (rhs2 parseState 1 4) Expr }
   | e1=atomicTermNotQUident op_expr=dotOperator LARROW e3=noSeqTerm
       {
@@ -539,7 +618,7 @@ noSeqTerm:
       {
         let lbs = (attrs, lb)::lbs in
         let lbs = focusAttrLetBindings lbs (rhs2 parseState 2 3) in
-        mk_term (Let(q, lbs, e)) (rhs2 parseState 1 5) Expr
+        mk_term (Let(q, lbs, e)) (rhs2 parseState 1 6) Expr
       }
   | FUNCTION pbs=left_flexible_nonempty_list(BAR, patternBranch)
       {
@@ -549,6 +628,31 @@ noSeqTerm:
   | ASSUME e=atomicTerm
       { let a = set_lid_range assume_lid (rhs parseState 1) in
         mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2) }
+
+  | ASSERT e=atomicTerm tactic_opt=option(BY tactic=thunk2(typ) {tactic})
+      {
+        match tactic_opt with
+        | None ->
+          let a = set_lid_range assert_lid (rhs parseState 1) in
+          mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2)
+        | Some tac ->
+          let a = set_lid_range assert_by_tactic_lid (rhs parseState 1) in
+          mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e; tac] (rhs2 parseState 1 4)
+      }
+
+   | UNDERSCORE BY tactic=thunk(atomicTerm)
+     {
+         let a = set_lid_range synth_lid (rhs parseState 1) in
+         mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [tactic] (rhs2 parseState 1 2)
+
+     }
+
+   | SYNTH tactic=atomicTerm
+     {
+         let a = set_lid_range synth_lid (rhs parseState 1) in
+         mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [tactic] (rhs2 parseState 1 2)
+
+     }
 
 typ:
   | t=simpleTerm  { t }
@@ -678,6 +782,15 @@ tmEqWith(X):
       { mk_term (Op(mk_ident("-", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
   | MINUS e=tmEqWith(X)
       { mk_uminus e (rhs parseState 1) (rhs2 parseState 1 2) Expr }
+  | QUOTE e=tmEqWith(X)
+      { mk_term (Quote (e, Dynamic)) (rhs2 parseState 1 3) Un }
+  | BACKTICK e=tmEqWith(X)
+      { mk_term (Quote (e, Static)) (rhs2 parseState 1 3) Un }
+  | BACKTICK_AT e=atomicTerm
+      { let q = mk_term (Quote (e, Dynamic)) (rhs2 parseState 1 3) Un in
+        mk_term (Antiquote q) (rhs2 parseState 1 3) Un }
+  | BACKTICK_HASH e=atomicTerm
+      { mk_term (Antiquote e) (rhs2 parseState 1 3) Un }
   | e=tmNoEqWith(X)
       { e }
 
@@ -686,15 +799,21 @@ tmNoEqWith(X):
       { consTerm (rhs parseState 2) e1 e2 }
   | e1=tmNoEqWith(X) AMP e2=tmNoEqWith(X)
       {
-        let x, t, f = match extract_named_refinement e1 with
-            | Some (x, t, f) -> x, t, f
-            | _ -> raise_error (Fatal_MissingQuantifierBinder, "Missing binder for the first component of a dependent tuple") (rhs parseState 1) in
-        let dom = mkRefinedBinder x t true f (rhs parseState 1) None in
-        let tail = e2 in
-        let dom, res = match tail.tm with
-            | Sum(dom', res) -> dom::dom', res
-            | _ -> [dom], tail in
-        mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
+            let dom =
+               match extract_named_refinement e1 with
+               | Some (x, t, f) ->
+                 let dom = mkRefinedBinder x t true f (rhs parseState 1) None in
+                 Inl dom
+               | _ ->
+                 Inr e1
+            in
+            let tail = e2 in
+            let dom, res =
+                match tail.tm with
+                | Sum(dom', res) -> dom::dom', res
+                | _ -> [dom], tail
+            in
+            mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
       }
   | e1=tmNoEqWith(X) op=OPINFIX3 e2=tmNoEqWith(X)
       { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
@@ -703,6 +822,8 @@ tmNoEqWith(X):
   | e1=tmNoEqWith(X) op=OPINFIX4 e2=tmNoEqWith(X)
       { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
   | LBRACE e=recordExp RBRACE { e }
+  | BACKTICK_PERC e=atomicTerm
+      { mk_term (VQuote e) (rhs2 parseState 1 3) Un }
   | op=TILDE e=atomicTerm
       { mk_term (Op(mk_ident (op, rhs parseState 1), [e])) (rhs2 parseState 1 2) Formula }
   | e=X { e }
@@ -786,8 +907,6 @@ atomicTermQUident:
 
 atomicTermNotQUident:
   | UNDERSCORE { mk_term Wild (rhs parseState 1) Un }
-  | ASSERT   { let a = set_lid_range assert_lid (rhs parseState 1) in
-               mk_term (Var a) (rhs parseState 1) Expr }
   | tv=tvar     { mk_term (Tvar tv) (rhs parseState 1) Type_level }
   | c=constant { mk_term (Const c) (rhs parseState 1) Expr }
   | x=opPrefixTerm(atomicTermNotQUident)
@@ -956,16 +1075,16 @@ warn_error_list:
 warn_error:
   | f=flag r=range
     { [(f, r)] }
-  | f=flag r=range e=warn_error 
+  | f=flag r=range e=warn_error
     { (f, r) :: e }
 
 flag:
   | op=OPINFIX1
-    { if op = "@" then CError else failwith (format1 "unexpected token %s in warn-error list" op)}
+    { if op = "@" then CAlwaysError else failwith (format1 "unexpected token %s in warn-error list" op)}
   | op=OPINFIX2
     { if op = "+" then CWarning else failwith (format1 "unexpected token %s in warn-error list" op)}
   | MINUS
-	  { CSilent }
+          { CSilent }
 
 range:
   | i=INT
@@ -998,7 +1117,7 @@ range:
      { mk_ident(op, rhs parseState 1) }
   | op=OP_MIXFIX_ACCESS
      { mk_ident(op, rhs parseState 1) }
-  
+
 /* These infix operators have a lower precedence than EQUALS */
 %inline operatorInfix0ad12:
   | op=OPINFIX0a

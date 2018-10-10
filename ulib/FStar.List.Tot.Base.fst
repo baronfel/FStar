@@ -21,6 +21,8 @@ used in specifications.
 *)
 module FStar.List.Tot.Base
 
+module F = FStar.FunctionalExtensionality
+
 (**
 Base operations
 *)
@@ -49,6 +51,22 @@ type-checking time, that [l] be nonempty. Named as in: OCaml, F#, Coq
 *)
 val tl: l:list 'a {Cons? l} -> Tot (list 'a)
 let tl = tail
+
+(** [last l] returns the last element of [l]. Requires, at
+type-checking time, that [l] be nonempty. Named as in: Haskell
+*)
+val last: l:list 'a {Cons? l} -> Tot 'a
+let rec last = function
+  | [hd] -> hd
+  | _::tl -> last tl
+
+(** [init l] returns [l] without its last element. Requires, at
+type-checking time, that [l] be nonempty. Named as in: Haskell
+*)
+val init: l:list 'a {Cons? l} -> Tot (list 'a)
+let rec init = function
+  | [_] -> []
+  | hd::tl -> hd::(init tl)
 
 (** [length l] returns the total number of elements in [l]. Named as
 in: OCaml, F#, Coq *)
@@ -433,8 +451,8 @@ polymorphic comparison using both the [compare] function and the (>)
 infix operator are such that [compare x y] is positive if, and only
 if, x > y. Requires, at type-checking time, [compare] to be a pure
 total function. *)
-val bool_of_compare : ('a -> 'a -> Tot int) -> 'a -> 'a -> Tot bool
-let bool_of_compare f x y = f x y > 0
+val bool_of_compare : #a:Type -> (a -> a -> Tot int) -> a -> a -> Tot bool
+let bool_of_compare #a f x y = f x y > 0
 
 (** [compare_of_bool] turns a strict order into a comparison
 function. More precisely, [compare_of_bool rel x y] returns a positive
@@ -445,9 +463,13 @@ if, x > y. Requires, at type-checking time, [rel] to be a pure total
 function.  *)
 val compare_of_bool : #a:eqtype -> (a -> a -> Tot bool) -> a -> a -> Tot int
 let compare_of_bool #a rel x y =
-  if x `rel` y  then 1
-  else if x = y then 0
-  else 0-1
+    if x `rel` y  then 1
+    else if x = y then 0
+    else 0-1
+
+let compare_of_bool_of_compare (#a:eqtype) (f:a -> a -> Tot bool)
+  : Lemma (forall x y. bool_of_compare (compare_of_bool f) x y == f x y)
+  = ()
 
 (** [sortWith compare l] returns the list [l'] containing the elements
 of [l] sorted along the comparison function [compare], in such a way
@@ -462,9 +484,6 @@ let rec sortWith f = function
      partition_length (bool_of_compare f pivot) tl;
      append (sortWith f lo) (pivot::sortWith f hi)
 
-#set-options "--initial_fuel 4 --initial_ifuel 4"
-private abstract let test_sort :unit = assert (sortWith (compare_of_bool (<)) [3; 2; 1] = [1; 2; 3])
-
 (** A l1 is a strict prefix of l2. *)
 
 let rec strict_prefix_of (#a: Type) (l1 l2: list a)
@@ -475,3 +494,9 @@ let rec strict_prefix_of (#a: Type) (l1 l2: list a)
 = match l2 with
   | [] -> False
   | _ :: q -> l1 == q \/ l1 `strict_prefix_of` q
+
+val list_unref : #a:Type -> #p:(a -> Type0) -> list (x:a{p x}) -> Tot (list a)
+let rec list_unref #a #p l =
+    match l with
+    | [] -> []
+    | x::xs -> x :: list_unref xs
