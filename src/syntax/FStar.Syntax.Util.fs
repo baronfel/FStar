@@ -228,7 +228,7 @@ let comp_to_comp_typ_nouniv (c:comp) : comp_typ =
 let comp_set_flags (c:comp) f =
     {c with n=Comp ({comp_to_comp_typ_nouniv c with flags=f})}
 
-let lcomp_set_flags (lc:lcomp) (fs:list<cflags>) =
+let lcomp_set_flags (lc:lcomp) (fs:list<cflag>) =
     let comp_typ_set_flags (c:comp) =
         match c.n with
         | Total _
@@ -541,7 +541,7 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
       | Equal -> g()
       | _ -> Unknown
     in
-    let equal_data f1 (args1:Syntax.args) f2 (args2:Syntax.args) =
+    let equal_data (f1:fv) (args1:Syntax.args) (f2:fv) (args2:Syntax.args) =
         // we got constructors! we know they are injective and disjoint, so we can do some
         // good analysis on them
         if fv_eq f1 f2
@@ -557,6 +557,14 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
                                 eq_inj acc (eq_tm a1 a2)) Equal <| List.zip args1 args2
         ) else NotEqual
     in
+    let heads_and_args_in_case_both_data :option<(fv * args * fv * args)> =
+      let head1, args1 = t1 |> unmeta |> head_and_args in
+      let head2, args2 = t2 |> unmeta |> head_and_args in
+      match (un_uinst head1).n, (un_uinst head2).n with
+      | Tm_fvar f, Tm_fvar g when f.fv_qual = Some Data_ctor &&
+                                  g.fv_qual = Some Data_ctor -> Some (f, args1, g, args2)
+      | _ -> None
+    in
     match (unmeta t1).n, (unmeta t2).n with
     // We sometimes compare open terms, as we get alpha-equivalence
     // for free.
@@ -569,10 +577,12 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
     | Tm_name a, Tm_name b ->
       equal_if (bv_eq a b)
 
-    | Tm_fvar f, Tm_fvar g ->
-      if f.fv_qual = Some Data_ctor && g.fv_qual = Some Data_ctor
-      then equal_data f [] g []
-      else equal_if (fv_eq f g)
+    | _ when heads_and_args_in_case_both_data |> is_some ->  //matches only when both are data constructors
+      heads_and_args_in_case_both_data |> must |> (fun (f, args1, g, args2) ->
+        equal_data f args1 g args2
+      )
+
+    | Tm_fvar f, Tm_fvar g -> equal_if (fv_eq f g)
 
     | Tm_uinst(f, us), Tm_uinst(g, vs) ->
       eq_and (eq_tm f g) (fun () -> equal_if (eq_univs_list us vs))
@@ -590,9 +600,6 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
 
     | Tm_app (h1, args1), Tm_app (h2, args2) ->
       begin match (un_uinst h1).n, (un_uinst h2).n with
-      | Tm_fvar f1, Tm_fvar f2 when f1.fv_qual = Some Data_ctor && f2.fv_qual = Some Data_ctor ->
-        equal_data f1 args1 f2 args2
-
       | Tm_fvar f1, Tm_fvar f2 when fv_eq f1 f2 && List.mem (string_of_lid (lid_of_fv f1)) injectives ->
         equal_data f1 args1 f2 args2
 
@@ -646,6 +653,7 @@ and eq_aqual a1 a2 =
     | _, None -> NotEqual
     | Some (Implicit b1), Some (Implicit b2) when b1=b2 -> Equal
     | Some (Meta t1), Some (Meta t2) -> eq_tm t1 t2
+    | Some Equality, Some Equality -> Equal
     | _ -> NotEqual
 
 and branch_matches b1 b2 =
@@ -700,6 +708,7 @@ let rec is_unit t =
       fv_eq_lid fv PC.unit_lid
       || fv_eq_lid fv PC.squash_lid
       || fv_eq_lid fv PC.auto_squash_lid
+    | Tm_app (head, _) -> is_unit head
     | Tm_uinst (t, _) -> is_unit t
     | _ -> false
 
@@ -1120,7 +1129,11 @@ let attr_eq a a' =
    | _ -> false
 
 let attr_substitute =
-mk (Tm_fvar (lid_as_fv (lid_of_path ["FStar"; "Pervasives"; "Substitute"] Range.dummyRange) delta_constant None)) None Range.dummyRange
+    mk (Tm_fvar (lid_as_fv (lid_of_path ["FStar"; "Pervasives"; "Substitute"] Range.dummyRange)
+                           delta_constant
+                           None))
+       None
+       Range.dummyRange
 
 let exp_true_bool : term = mk (Tm_constant (Const_bool true)) None dummyRange
 let exp_false_bool : term = mk (Tm_constant (Const_bool false)) None dummyRange
@@ -1144,6 +1157,7 @@ let t_true  = fvar_const PC.true_lid  //NS delta: wrong? should be Delta_constan
 let tac_opaque_attr = exp_string "tac_opaque"
 let dm4f_bind_range_attr = fvar_const PC.dm4f_bind_range_attr
 let tcdecltime_attr = fvar_const PC.tcdecltime_attr
+let inline_let_attr = fvar_const PC.inline_let_attr
 
 let t_ctx_uvar_and_sust = fvar_const PC.ctx_uvar_and_subst_lid
 
@@ -1799,7 +1813,7 @@ and comp_eq_dbg (dbg : bool) c1 c2 =
     (check "comp result typ"  (term_eq_dbg dbg c1.result_typ c2.result_typ)) &&
     (* (check "comp args"  (eqlist arg_eq_dbg dbg c1.effect_args c2.effect_args)) && *)
     true //eq_flags c1.flags c2.flags
-and eq_flags_dbg (dbg : bool) (f1 : cflags) (f2 : cflags) = true // TODO? Or just ignore?
+and eq_flags_dbg (dbg : bool) (f1 : cflag) (f2 : cflag) = true // TODO? Or just ignore?
 and branch_eq_dbg (dbg : bool) (p1,w1,t1) (p2,w2,t2) =
     (check "branch pat"  (eq_pat p1 p2)) &&
     (check "branch body"  (term_eq_dbg dbg t1 t2))

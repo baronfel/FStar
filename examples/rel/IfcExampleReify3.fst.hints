@@ -2,35 +2,17 @@
   "“H\u0010\u0000¾$ WG—%e€h:ö",
   [
     [
-      "IfcExampleReify3.low_equiv",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "ae1b45e6f52df292e72d6ca8e86b43b0"
-    ],
-    [
       "IfcExampleReify3.is_x",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d445df762e0c48bca9ebcfcead6f0786"
+      "31fd5d58ee63f505499a75aa9f73f922"
     ],
     [
       "IfcExampleReify3.p1_x",
       1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "f5857a0da645411b002d3a6405bbd007"
-    ],
-    [
-      "IfcExampleReify3.p1_x",
-      2,
       2,
       1,
       [
@@ -71,7 +53,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.upd", "unit_typing"
       ],
       0,
-      "88d31b1820a5b9433b62a571b23abbcc"
+      "502dd8c4c50d9b205f61ab651a8b32eb"
     ],
     [
       "IfcExampleReify3.ni_p1",
@@ -122,16 +104,7 @@
         "unit_typing"
       ],
       0,
-      "e97622cb3c373ed9f13324c2f2c9ec2a"
-    ],
-    [
-      "IfcExampleReify3.low_equiv",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "fe6bf112d521e08b226b663ae9740b24"
+      "a675bd2e0e2d5d6b8be2f8aa084c6bd8"
     ],
     [
       "IfcExampleReify3.is_x",
@@ -140,34 +113,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "64b9b0c120f1f54c0e2b442a871b8433"
-    ],
-    [
-      "IfcExampleReify3.is_x",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "b86760edeca0b2aaed33602296fbfaf1"
-    ],
-    [
-      "IfcExampleReify3.p1",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "46a2bc8ecfdce35c698bec22a2112bf8"
-    ],
-    [
-      "IfcExampleReify3.p1_x",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "82b0b0517a0d004304c173da48784ad7"
+      "8f7f153d3709956518bdfa3b771bdf87"
     ]
   ]
 ]

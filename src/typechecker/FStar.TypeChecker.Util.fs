@@ -32,8 +32,7 @@ open FStar.Ident
 open FStar.Syntax.Subst
 open FStar.TypeChecker.Common
 open FStar.Syntax
-open FStar.Syntax
-open FStar.Syntax
+open FStar.Dyn
 
 type lcomp_with_binder = option<bv> * lcomp
 
@@ -54,7 +53,7 @@ let report env errs =
 (* Unification variables *)
 (************************************************************************)
 let new_implicit_var reason r env k =
-    new_implicit_var_aux reason r env k Strict
+    new_implicit_var_aux reason r env k Strict None
 
 let close_guard_implicits env (xs:binders) (g:guard_t) : guard_t =
     if not <| Options.eager_subtyping() then g else
@@ -358,22 +357,31 @@ let close_lcomp env bvs (lc:lcomp) =
     S.mk_lcomp lc.eff_name lc.res_typ lc.cflags
                (fun () -> close_comp env bvs (lcomp_comp lc))
 
+let close_comp_if_refinement_t (env:env) (t:term) (x:bv) (c:comp) :comp =
+  let t = N.normalize_refinement N.whnf_steps env t in
+  match t.n with
+  | Tm_refine ({ sort = { n = Tm_fvar fv } }, _) when S.fv_eq_lid fv C.unit_lid -> close_comp env [x] c
+  | _ -> c
+
 let should_not_inline_lc (lc:lcomp) =
     lc.cflags |> BU.for_some (function SHOULD_NOT_INLINE -> true | _ -> false)
 
 (* should_return env (Some e) lc:
  * We will "return" e, adding an equality to the VC, if all of the following conditions hold
  * (a) e is a pure or ghost term
- * (b) Its return type, lc.result_typ, is not a sub-singleton (unit, squash, etc)
+ * (b) Its return type, lc.res_typ, is not a sub-singleton (unit, squash, etc), if lc.res_typ is an arrow, then we check the comp type of the arrow
+ *     An exception is made for reifiable effects -- they are useful even if they return unit
  * (c) Its head symbol is not marked irreducible (in this case inlining is not going to help, it is equivalent to having a bound variable)
  * (d) It's not a let rec, as determined by the absence of the SHOULD_NOT_INLINE flag---see issue #1362. Would be better to just encode inner let recs to the SMT solver properly
  *)
 let should_return env eopt lc =
+    //if lc.res_typ is not an arrow, arrow_formals_comp returns Tot lc.res_typ
+    let lc_is_unit = lc.res_typ |> U.arrow_formals_comp |> snd |> (fun c -> not (Env.is_reifiable_comp env c) && (U.comp_result c |> U.is_unit)) in
     match eopt with
     | None -> false //no term to return
     | Some e ->
       U.is_pure_or_ghost_lcomp lc                &&  //condition (a), (see above)
-      not (U.is_unit lc.res_typ)                 &&  //condition (b)
+      not lc_is_unit                             &&  //condition (b)
       (let head, _ = U.head_and_args' e in
        match (U.un_uinst head).n with
        | Tm_fvar fv ->  not (Env.is_irreducible env (lid_of_fv fv)) //condition (c)
@@ -583,19 +591,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             then Inl (c2, "both ml")
             else Inr "c1 not trivial, and both are not ML"
           in
-          let subst_c2 e1opt reason =
-            match e1opt, b with
-            | Some e, Some x ->
-                Inl (SS.subst_comp [NT(x,e)] c2, reason)
-            | _ -> aux()
-          in
           let try_simplify () =
-            let maybe_close t x c =
-              let t = N.normalize_refinement N.whnf_steps env t in
-              match t.n with
-              | Tm_refine ({ sort = { n = Tm_fvar fv } }, _) when S.fv_eq_lid fv C.unit_lid -> close_comp env [x] c
-              | _ -> c
-            in
             if Option.isNone (Env.try_lookup_effect_lid env C.effect_GTot_lid) //if we're very early in prims
             then if U.is_tot_or_gtot_comp c1
                  && U.is_tot_or_gtot_comp c2
@@ -604,24 +600,24 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                                    "Non-trivial pre-conditions very early in prims, even before we have defined the PURE monad")
                                    (Env.get_range env)
             else if U.is_total_comp c1
-                 && U.is_total_comp c2
-            then subst_c2 e1opt "both total"
+            then (*
+                  * Helper routine to close the compuation c with c1's return type
+                  * When c1's return type is of the form _:t{phi}, is is useful to know
+                  *   that t{phi} is inhabited, even if c1 is inlined etc.
+                  *)
+                 let close (x:bv) (reason:string) (c:comp) =
+                   let x = { x with sort = U.comp_result c1 } in
+                   Inl (close_comp_if_refinement_t env x.sort x c, reason)
+                 in
+                 match e1opt, b with
+                 | Some e, Some x ->
+                   c2 |> SS.subst_comp [NT (x, e)] |> close x "c1 Tot"
+                 | _, Some x -> c2 |> close x "c1 Tot only close"
+                 | _, _ -> aux ()
             else if U.is_tot_or_gtot_comp c1
                  && U.is_tot_or_gtot_comp c2
-            then Inl (S.mk_GTotal (U.comp_result c2), "both gtot")
-            else match e1opt, b with
-                   | Some e, Some x ->
-                     if U.is_total_comp c1
-                     && not (Syntax.is_null_bv x)
-                     then let c2 = SS.subst_comp [NT(x,e)] c2 in
-                          let x = {x with sort = U.comp_result c1} in
-                          Inl (maybe_close x.sort x c2, "c1 Tot")
-                          //forall (_:t). c2[e/x]
-                          //It's important to have that (forall (_:t)) since
-                          //if x does not appear free in e,
-                          //then it may still be important to know that t is inhabited
-                     else aux ()
-                   | _ -> aux ()
+            then Inl (S.mk_GTotal (U.comp_result c2), "both GTot")
+            else aux ()
           in
           match try_simplify () with
           | Inl (c, reason) ->
@@ -853,7 +849,7 @@ let maybe_return_e2_and_bind
 
 let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) delta_constant None
 
-let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflags> * (bool -> lcomp))>) : lcomp =
+let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflag> * (bool -> lcomp))>) : lcomp =
     let eff = List.fold_left (fun eff (_, eff_label, _, _) -> join_effects env eff eff_label)
                              C.effect_PURE_lid
                              lcases
@@ -917,6 +913,28 @@ let check_comp env (e:term) (c:comp) (c':comp) : term * comp * guard_t =
         else raise_error (Err.computed_computation_type_does_not_match_annotation env e c c') (Env.get_range env)
     | Some g -> e, c', g
 
+let universe_of_comp env u_res c =
+  (*
+   * Universe computation for M t wp:
+   *   if M is pure or ghost, then return universe of t
+   *   else if M is not marked Total, then return u0
+   *        else if M has no additional binders, then return universe of t
+   *        else delegate the computation to repr of M, error out of no repr
+   *)
+  let c_lid = c |> U.comp_effect_name |> Env.norm_eff_name env in
+  if U.is_pure_or_ghost_effect c_lid then u_res  //if pure or ghost, return the universe of the return type
+  else
+    let is_total = Env.lookup_effect_quals env c_lid |> List.existsb (fun q -> q = S.TotalEffect) in
+    if not is_total then S.U_zero  //if it is a non-total effect then u0
+    else match Env.effect_repr env c u_res with
+         | None ->
+           raise_error (Errors.Fatal_EffectCannotBeReified,
+                        (BU.format1 "Effect %s is marked total but does not have a repr" (Print.lid_to_string c_lid)))
+                        c.pos
+         | Some tm -> env.universe_of env tm
+
+
+
 let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
     if env.is_pattern then e, lc else
     let is_type t =
@@ -971,24 +989,38 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
           let strengthen_trivial () =
             let c = lcomp_comp lc in
             let res_t = Util.comp_result c in
-            (*
-             * AR: if the computation is pure/ghost then return already should take care of it (also enabling it for pure/ghost bloats the wp a lot)
-             *)
-            if c |> Util.comp_effect_name |> norm_eff_name env |> Util.is_pure_or_ghost_effect ||  //if pure or ghost
-               Util.eq_tm t res_t = Util.Equal then begin  //or res_t = t
-               if Env.debug env <| Options.Extreme
-               then BU.print3 "weaken_result_type::strengthen_trivial: Not inserting the return since either the comp c:%s is pure/ghost or res_t:%s is same as t:%s\n"
-                              (Print.lid_to_string (Util.comp_effect_name c)) (Print.term_to_string res_t) (Print.term_to_string t);
-               Util.set_result_typ c t  //set the result type in c
+
+            let set_result_typ (c:comp) :comp = Util.set_result_typ c t in
+
+            if Util.eq_tm t res_t = Util.Equal then begin  //if the two types res_t and t are same, then just set the result type
+              if Env.debug env <| Options.Extreme
+              then BU.print2 "weaken_result_type::strengthen_trivial: res_t:%s is same as t:%s\n"
+                             (Print.term_to_string res_t) (Print.term_to_string t);
+              set_result_typ c
             end
             else
-              let x = S.new_bv (Some res_t.pos) res_t in
-              let cret = return_value env (comp_univ_opt c) res_t (S.bv_to_name x) in
-              let lc = bind e.pos env (Some e) (U.lcomp_of_comp c) (Some x, Util.lcomp_of_comp cret) in
-              if Env.debug env <| Options.Extreme
-              then BU.print4 "weaken_result_type::strengthen_trivial: Inserting a return for e: %s, c: %s, t: %s, and then post return lc: %s\n"
-                             (Print.term_to_string e) (Print.comp_to_string c) (Print.term_to_string t) (Print.lcomp_to_string lc);
-              Util.set_result_typ (lcomp_comp lc) t
+              let is_res_t_refinement =
+                let res_t = N.normalize_refinement N.whnf_steps env res_t in
+                match res_t.n with
+                | Tm_refine _ -> true
+                | _ -> false
+              in
+              //if t is a refinement, insert a return to capture the return type res_t
+              //we are not inlining e, rather just adding (fun (x:res_t) -> p x) at the end
+              if is_res_t_refinement then
+                let x = S.new_bv (Some res_t.pos) res_t in
+                let cret = return_value env (comp_univ_opt c) res_t (S.bv_to_name x) in
+                let lc = bind e.pos env (Some e) (U.lcomp_of_comp c) (Some x, Util.lcomp_of_comp cret) in
+                if Env.debug env <| Options.Extreme
+                then BU.print4 "weaken_result_type::strengthen_trivial: inserting a return for e: %s, c: %s, t: %s, and then post return lc: %s\n"
+                               (Print.term_to_string e) (Print.comp_to_string c) (Print.term_to_string t) (Print.lcomp_to_string lc);
+                set_result_typ (lcomp_comp lc)
+              else begin
+                if Env.debug env <| Options.Extreme
+                then BU.print2 "weaken_result_type::strengthen_trivial: res_t:%s is not a refinement, leaving c:%s as is\n"
+                               (Print.term_to_string res_t) (Print.comp_to_string c);
+                set_result_typ c
+              end
           in
           let lc = S.mk_lcomp lc.eff_name t lc.cflags strengthen_trivial in
           e, lc, g
@@ -1178,14 +1210,12 @@ let maybe_instantiate (env:Env.env) e t =
 
                   | _, (x, Some (Meta tau))::rest ->
                       let t = SS.subst subst x.sort in
-                      let v, _, g = new_implicit_var "Instantiation of meta argument" e.pos env t in
+                      let v, _, g = new_implicit_var_aux "Instantiation of meta argument"
+                                                         e.pos env t Strict
+                                                         (Some (mkdyn env, tau)) in
                       if Env.debug env Options.High then
                         BU.print1 "maybe_instantiate: Instantiating meta argument with %s\n"
                                 (Print.term_to_string v);
-                      let mark_meta_implicits tau g =
-                          { g with implicits =
-                              List.map (fun imp -> { imp with imp_meta = Some (env, tau) }) g.implicits } in
-                      let g = mark_meta_implicits tau g in
                       let subst = NT(x, v)::subst in
                       let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
                       (v, Some S.imp_tag)::args, bs, subst, Env.conj_guard g g'
@@ -1359,8 +1389,8 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
 
      let lecs = lec_hd :: lecs in
 
-     let gen_types (uvs:list<ctx_uvar>) =
-         let fail k =
+     let gen_types (uvs:list<ctx_uvar>) : list<(bv * aqual)> =
+         let fail k : unit =
              let lbname, e, c = lec_hd in
                raise_error (Errors.Fatal_FailToResolveImplicitArgument,
                             BU.format3 "Failed to resolve implicit argument of type '%s' in the type of %s (%s)"
@@ -1685,7 +1715,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
 
         | Inline_for_extraction ->
           quals |> List.for_all (fun x -> x=q || x=Logic || visibility x || reducibility x
-                                              || reification x || inferred x
+                                              || reification x || inferred x || has_eq x
                                               || (env.is_iface && x=Assumption)
                                               || x=NoExtract)
 
@@ -1741,6 +1771,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
       | Sig_bundle _ ->
         if not (quals |> BU.for_all (fun x ->
               x=Abstract
+              || x=Inline_for_extraction
               || x=NoExtract
               || inferred x
               || visibility x
@@ -1794,7 +1825,7 @@ let must_erase_for_extraction (g:env) (t:typ) =
           aux env t
         | Tm_app(head, [_]) ->
           (match (U.un_uinst head).n with
-           | Tm_fvar fv -> fv_eq_lid fv C.erased_lid || has_erased_for_extraction_attr fv  //may be we should just call aux on head?                           
+           | Tm_fvar fv -> fv_eq_lid fv C.erased_lid || has_erased_for_extraction_attr fv  //may be we should just call aux on head?
            | _ -> false)
         | _ ->
           false
@@ -1809,7 +1840,8 @@ let must_erase_for_extraction (g:env) (t:typ) =
                              Env.Iota] env t in
 //        debug g (fun () -> BU.print1 "aux %s\n" (Print.term_to_string t));
         let res = aux_whnf env t in
-        if Env.debug env <| Options.Other "Extraction" then BU.print2 "must_erase=%s: %s\n" (if res then "true" else "false") (Print.term_to_string t);
+        if Env.debug env <| Options.Other "Extraction"
+        then BU.print2 "must_erase=%s: %s\n" (if res then "true" else "false") (Print.term_to_string t);
         res
     in
     aux g t

@@ -1,25 +1,25 @@
 open Prims
 let (mkAssume :
-  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.caption,Prims.string)
-    FStar_Pervasives_Native.tuple3 -> FStar_SMTEncoding_Term.decl)
+  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.caption *
+    Prims.string) -> FStar_SMTEncoding_Term.decl)
   =
-  fun uu____11  ->
-    match uu____11 with
+  fun uu____12  ->
+    match uu____12 with
     | (tm,cap,nm) ->
-        let uu____21 =
-          let uu____22 = FStar_SMTEncoding_Term.escape nm  in
+        let uu____25 =
+          let uu____26 = FStar_SMTEncoding_Term.escape nm  in
           {
             FStar_SMTEncoding_Term.assumption_term = tm;
             FStar_SMTEncoding_Term.assumption_caption = cap;
-            FStar_SMTEncoding_Term.assumption_name = uu____22;
+            FStar_SMTEncoding_Term.assumption_name = uu____26;
             FStar_SMTEncoding_Term.assumption_fact_ids = []
           }  in
-        FStar_SMTEncoding_Term.Assume uu____21
+        FStar_SMTEncoding_Term.Assume uu____25
   
 let norng :
-  'Auu____31 'Auu____32 .
-    ('Auu____31 -> FStar_Range.range -> 'Auu____32) ->
-      'Auu____31 -> 'Auu____32
+  'Auu____37 'Auu____38 .
+    ('Auu____37 -> FStar_Range.range -> 'Auu____38) ->
+      'Auu____37 -> 'Auu____38
   = fun f  -> fun x  -> f x FStar_Range.dummyRange 
 let (mkTrue : FStar_SMTEncoding_Term.term) =
   FStar_SMTEncoding_Term.mkTrue FStar_Range.dummyRange 
@@ -32,128 +32,127 @@ let (mkInteger' : Prims.int -> FStar_SMTEncoding_Term.term) =
 let (mkBoundV : Prims.int -> FStar_SMTEncoding_Term.term) =
   norng FStar_SMTEncoding_Term.mkBoundV 
 let (mkFreeV :
-  (Prims.string,FStar_SMTEncoding_Term.sort) FStar_Pervasives_Native.tuple2
-    -> FStar_SMTEncoding_Term.term)
+  (Prims.string * FStar_SMTEncoding_Term.sort) -> FStar_SMTEncoding_Term.term)
   = norng FStar_SMTEncoding_Term.mkFreeV 
 let (mkApp' :
-  (FStar_SMTEncoding_Term.op,FStar_SMTEncoding_Term.term Prims.list)
-    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+  (FStar_SMTEncoding_Term.op * FStar_SMTEncoding_Term.term Prims.list) ->
+    FStar_SMTEncoding_Term.term)
   = norng FStar_SMTEncoding_Term.mkApp' 
 let (mkApp :
-  (Prims.string,FStar_SMTEncoding_Term.term Prims.list)
-    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+  (Prims.string * FStar_SMTEncoding_Term.term Prims.list) ->
+    FStar_SMTEncoding_Term.term)
   = norng FStar_SMTEncoding_Term.mkApp 
 let (mkNot : FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term) =
   norng FStar_SMTEncoding_Term.mkNot 
 let (mkMinus : FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term) =
   norng FStar_SMTEncoding_Term.mkMinus 
 let (mkAnd :
-  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
-    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+    FStar_SMTEncoding_Term.term)
   = norng FStar_SMTEncoding_Term.mkAnd 
 let (mkOr :
-  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
-    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+    FStar_SMTEncoding_Term.term)
   = norng FStar_SMTEncoding_Term.mkOr 
 let (mkImp :
-  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
-    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+    FStar_SMTEncoding_Term.term)
   = norng FStar_SMTEncoding_Term.mkImp 
 let (mkIff :
-  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
-    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+    FStar_SMTEncoding_Term.term)
   = norng FStar_SMTEncoding_Term.mkIff 
 let (mkEq :
-  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
-    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+    FStar_SMTEncoding_Term.term)
   = norng FStar_SMTEncoding_Term.mkEq 
 let (mkLT :
-  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
-    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+    FStar_SMTEncoding_Term.term)
   = norng FStar_SMTEncoding_Term.mkLT 
 let (mkLTE :
-  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
-    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+    FStar_SMTEncoding_Term.term)
   = norng FStar_SMTEncoding_Term.mkLTE 
 let (mkGT :
-  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
-    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+    FStar_SMTEncoding_Term.term)
   = norng FStar_SMTEncoding_Term.mkGT 
 let (mkGTE :
-  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
-    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+    FStar_SMTEncoding_Term.term)
   = norng FStar_SMTEncoding_Term.mkGTE 
 let (mkAdd :
-  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
-    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+    FStar_SMTEncoding_Term.term)
   = norng FStar_SMTEncoding_Term.mkAdd 
 let (mkSub :
-  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
-    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+    FStar_SMTEncoding_Term.term)
   = norng FStar_SMTEncoding_Term.mkSub 
 let (mkDiv :
-  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
-    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+    FStar_SMTEncoding_Term.term)
   = norng FStar_SMTEncoding_Term.mkDiv 
 let (mkMul :
-  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
-    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+    FStar_SMTEncoding_Term.term)
   = norng FStar_SMTEncoding_Term.mkMul 
 let (mkMod :
-  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
-    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+    FStar_SMTEncoding_Term.term)
   = norng FStar_SMTEncoding_Term.mkMod 
 let (mkNatToBv :
   Prims.int -> FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term) =
   fun sz  -> norng (FStar_SMTEncoding_Term.mkNatToBv sz) 
 let (mkBvAnd :
-  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
-    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+    FStar_SMTEncoding_Term.term)
   = norng FStar_SMTEncoding_Term.mkBvAnd 
 let (mkBvXor :
-  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
-    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+    FStar_SMTEncoding_Term.term)
   = norng FStar_SMTEncoding_Term.mkBvXor 
 let (mkBvOr :
-  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
-    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+    FStar_SMTEncoding_Term.term)
   = norng FStar_SMTEncoding_Term.mkBvOr 
 let (mkBvAdd :
-  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
-    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+    FStar_SMTEncoding_Term.term)
   = norng FStar_SMTEncoding_Term.mkBvAdd 
 let (mkBvSub :
-  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
-    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+    FStar_SMTEncoding_Term.term)
   = norng FStar_SMTEncoding_Term.mkBvSub 
 let (mkBvShl :
   Prims.int ->
-    (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
-      FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+    (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+      FStar_SMTEncoding_Term.term)
   = fun sz  -> norng (FStar_SMTEncoding_Term.mkBvShl sz) 
 let (mkBvShr :
   Prims.int ->
-    (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
-      FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+    (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+      FStar_SMTEncoding_Term.term)
   = fun sz  -> norng (FStar_SMTEncoding_Term.mkBvShr sz) 
 let (mkBvUdiv :
   Prims.int ->
-    (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
-      FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+    (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+      FStar_SMTEncoding_Term.term)
   = fun sz  -> norng (FStar_SMTEncoding_Term.mkBvUdiv sz) 
 let (mkBvMod :
   Prims.int ->
-    (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
-      FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+    (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+      FStar_SMTEncoding_Term.term)
   = fun sz  -> norng (FStar_SMTEncoding_Term.mkBvMod sz) 
 let (mkBvMul :
   Prims.int ->
-    (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
-      FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+    (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+      FStar_SMTEncoding_Term.term)
   = fun sz  -> norng (FStar_SMTEncoding_Term.mkBvMul sz) 
 let (mkBvUlt :
-  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
-    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term)
+  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+    FStar_SMTEncoding_Term.term)
   = norng FStar_SMTEncoding_Term.mkBvUlt 
 let (mkBvUext :
   Prims.int -> FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term) =
@@ -161,30 +160,30 @@ let (mkBvUext :
 let (mkBvToNat : FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term)
   = norng FStar_SMTEncoding_Term.mkBvToNat 
 let (mkITE :
-  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
-    FStar_Pervasives_Native.tuple3 -> FStar_SMTEncoding_Term.term)
+  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term *
+    FStar_SMTEncoding_Term.term) -> FStar_SMTEncoding_Term.term)
   = norng FStar_SMTEncoding_Term.mkITE 
 let (mkCases :
   FStar_SMTEncoding_Term.term Prims.list -> FStar_SMTEncoding_Term.term) =
   norng FStar_SMTEncoding_Term.mkCases 
 let norng2 :
-  'Auu____507 'Auu____508 'Auu____509 .
-    ('Auu____507 -> 'Auu____508 -> FStar_Range.range -> 'Auu____509) ->
-      'Auu____507 -> 'Auu____508 -> 'Auu____509
+  'Auu____578 'Auu____579 'Auu____580 .
+    ('Auu____578 -> 'Auu____579 -> FStar_Range.range -> 'Auu____580) ->
+      'Auu____578 -> 'Auu____579 -> 'Auu____580
   = fun f  -> fun x  -> fun y  -> f x y FStar_Range.dummyRange 
 let norng3 :
-  'Auu____556 'Auu____557 'Auu____558 'Auu____559 .
-    ('Auu____556 ->
-       'Auu____557 -> 'Auu____558 -> FStar_Range.range -> 'Auu____559)
-      -> 'Auu____556 -> 'Auu____557 -> 'Auu____558 -> 'Auu____559
+  'Auu____628 'Auu____629 'Auu____630 'Auu____631 .
+    ('Auu____628 ->
+       'Auu____629 -> 'Auu____630 -> FStar_Range.range -> 'Auu____631)
+      -> 'Auu____628 -> 'Auu____629 -> 'Auu____630 -> 'Auu____631
   = fun f  -> fun x  -> fun y  -> fun z  -> f x y z FStar_Range.dummyRange 
 let norng4 :
-  'Auu____620 'Auu____621 'Auu____622 'Auu____623 'Auu____624 .
-    ('Auu____620 ->
-       'Auu____621 ->
-         'Auu____622 -> 'Auu____623 -> FStar_Range.range -> 'Auu____624)
+  'Auu____693 'Auu____694 'Auu____695 'Auu____696 'Auu____697 .
+    ('Auu____693 ->
+       'Auu____694 ->
+         'Auu____695 -> 'Auu____696 -> FStar_Range.range -> 'Auu____697)
       ->
-      'Auu____620 -> 'Auu____621 -> 'Auu____622 -> 'Auu____623 -> 'Auu____624
+      'Auu____693 -> 'Auu____694 -> 'Auu____695 -> 'Auu____696 -> 'Auu____697
   =
   fun f  ->
     fun x  -> fun y  -> fun z  -> fun w  -> f x y z w FStar_Range.dummyRange

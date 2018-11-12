@@ -167,6 +167,7 @@ let defaults =
       ("cache_checked_modules"        , Bool false);
       ("cache_dir"                    , Unset);
       ("cache_off"                    , Bool false);
+      ("cmi"                          , Bool false);
       ("codegen"                      , Unset);
       ("codegen-lib"                  , List []);
       ("debug"                        , List []);
@@ -195,6 +196,7 @@ let defaults =
       ("indent"                       , Bool false);
       ("initial_fuel"                 , Int 2);
       ("initial_ifuel"                , Int 1);
+      ("keep_query_captions"          , Bool true);
       ("lax"                          , Bool false);
       ("load"                         , List []);
       ("log_queries"                  , Bool false);
@@ -261,7 +263,8 @@ let defaults =
       ("__ml_no_eta_expand_coertions" , Bool false);
       ("__tactics_nbe"                , Bool false);
       ("warn_error"                   , String "");
-      ("use_extracted_interfaces"     , Bool false)]
+      ("use_extracted_interfaces"     , Bool false);
+      ("use_nbe"                      , Bool false)]
 
 let init () =
    let o = peek () in
@@ -290,6 +293,7 @@ let get_admit_except            ()      = lookup_opt "admit_except"             
 let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
 let get_cache_dir               ()      = lookup_opt "cache_dir"                (as_option as_string)
 let get_cache_off               ()      = lookup_opt "cache_off"                as_bool
+let get_cmi                     ()      = lookup_opt "cmi"                      as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_debug                   ()      = lookup_opt "debug"                    (as_list as_string)
@@ -315,6 +319,7 @@ let get_include                 ()      = lookup_opt "include"                  
 let get_indent                  ()      = lookup_opt "indent"                   as_bool
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
+let get_keep_query_captions     ()      = lookup_opt "keep_query_captions"      as_bool
 let get_lax                     ()      = lookup_opt "lax"                      as_bool
 let get_load                    ()      = lookup_opt "load"                     (as_list as_string)
 let get_log_queries             ()      = lookup_opt "log_queries"              as_bool
@@ -381,6 +386,7 @@ let get_no_positivity           ()      = lookup_opt "__no_positivity"          
 let get_ml_no_eta_expand_coertions ()   = lookup_opt "__ml_no_eta_expand_coertions" as_bool
 let get_warn_error              ()      = lookup_opt "warn_error"               (as_string)
 let get_use_extracted_interfaces ()     = lookup_opt "use_extracted_interfaces" as_bool
+let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
 
 let dlevel = function
    | "Low" -> Low
@@ -582,6 +588,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Do not read or write any .checked files");
 
       ( noshort,
+        "cmi",
+        Const (mk_bool true),
+        "Inline across module interfaces during extraction (aka. cross-module inlining)");
+
+      ( noshort,
         "codegen",
         EnumStr ["OCaml"; "FSharp"; "Kremlin"; "Plugin"],
         "Generate code for further compilation to executable code, or build a compiler plugin");
@@ -722,6 +733,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "initial_ifuel",
         IntStr "non-negative integer",
         "Number of unrolling of inductive datatypes to try at first (default 1)");
+
+       ( noshort,
+        "keep_query_captions",
+        BoolStr,
+        "Retain comments in the logged SMT queries (requires --log_queries; default true)");
 
        ( noshort,
         "lax",
@@ -1077,6 +1093,12 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
          "Extract interfaces from the dependencies and use them for verification (default 'false')");
 
         ( noshort,
+         "use_nbe",
+          BoolStr,
+         "Use normalization by evaluation as the default normalization srategy (default 'false')");
+
+
+        ( noshort,
           "__debug_embedding",
            WithSideEffect ((fun _ -> debug_embedding := true),
                            (Const (mk_bool true))),
@@ -1344,6 +1366,7 @@ let admit_smt_queries            () = get_admit_smt_queries           ()
 let admit_except                 () = get_admit_except                ()
 let cache_checked_modules        () = get_cache_checked_modules       ()
 let cache_off                    () = get_cache_off                   ()
+let cmi                          () = get_cmi                         ()
 type codegen_t = | OCaml | FSharp | Kremlin | Plugin
 let codegen                      () =
     Util.map_opt
@@ -1382,6 +1405,8 @@ let lax                          () = get_lax                         ()
 let load                         () = get_load                        ()
 let legacy_interactive           () = get_in                          ()
 let log_queries                  () = get_log_queries                 ()
+let keep_query_captions          () = log_queries                     ()
+                                    && get_keep_query_captions        ()
 let log_types                    () = get_log_types                   ()
 let max_fuel                     () = get_max_fuel                    ()
 let max_ifuel                    () = get_max_ifuel                   ()
@@ -1455,6 +1480,7 @@ let no_positivity                () = get_no_positivity               ()
 let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 let warn_error                   () = get_warn_error                  ()
 let use_extracted_interfaces     () = get_use_extracted_interfaces    ()
+let use_nbe                      () = get_use_nbe                     ()
 
 let with_saved_options f =
   // take some care to not mess up the stack on errors

@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "958524cbc225024e35084b0aeb2ae1c9"
+      "d6fed7f9db9c1ae97d8b320e33cec02d"
     ],
     [
       "IMSTsub.nat_rel",
@@ -23,7 +23,7 @@
         "token_correspondence_IMSTsub.nat_rel_"
       ],
       0,
-      "e3315a8a7469cf510c95d26c18a1bf16"
+      "045a44a3ec9f32c6941588e45dc787db"
     ],
     [
       "IMSTsub.eq_rel'",
@@ -31,11 +31,13 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "41457e142f0c2053512a3cd4fbe03804"
+      "5f1235c5e7bb3b5295bcf9d56b06ddb9"
     ],
     [
       "IMSTsub.eq_rel",
@@ -49,7 +51,7 @@
         "token_correspondence_IMSTsub.eq_rel_"
       ],
       0,
-      "94996c7874dd39e72f226114f1248a19"
+      "8275559e5a58a69e85b2cfef2da30f80"
     ],
     [
       "IMSTsub.f",
@@ -58,7 +60,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "unit_inversion" ],
       0,
-      "cda0dc304de22c11282a1bcfb53c5dae"
+      "3270cc099430a211eadd89ee2c2f622f"
     ],
     [
       "IMSTsub.g",
@@ -67,14 +69,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "b2t_def",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
         "equation_FStar.Preorder.preorder",
         "equation_FStar.Preorder.preorder_rel",
         "equation_FStar.Preorder.stable", "equation_IMSTsub.eq_rel",
         "equation_IMSTsub.eq_rel_", "equation_IMSTsub.nat_rel",
-        "equation_IMSTsub.nat_rel_", "equation_Prims.nat",
-        "function_token_typing_IMSTsub.nat_rel",
+        "equation_IMSTsub.nat_rel_", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_IMSTsub.nat_rel",
+        "function_token_typing_Prims.int",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "int_inversion",
         "interpretation_IMSTsub_Tm_abs_1661f7094403c88cb824263727456b29",
@@ -85,12 +87,13 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_IMSTsub.eq_rel_",
         "token_correspondence_IMSTsub.nat_rel_"
       ],
       0,
-      "ffb68247e18ce6f85926a15245907043"
+      "6461ca752093de91ea486bc7ac3acded"
     ],
     [
       "IMSTsub.h",
@@ -114,7 +117,7 @@
         "token_correspondence_IMSTsub.nat_rel_"
       ],
       0,
-      "6899dff9f6ece6b609529f8ee17a46b2"
+      "d8008832ed8c3c9f02af64215f56fc1b"
     ],
     [
       "IMSTsub.idx",
@@ -123,7 +126,7 @@
       1,
       [ "@query" ],
       0,
-      "972f689b089e086a2ef31b19829355e8"
+      "f69da9a858796bdca448d5a2cf3a4336"
     ],
     [
       "IMSTsub.nat_rel",
@@ -138,7 +141,7 @@
         "token_correspondence_IMSTsub.nat_rel_"
       ],
       0,
-      "c22d516504ee91f9a1505b3a4dd34d08"
+      "d846b39fd193456eabcb910e4e1b4471"
     ],
     [
       "IMSTsub.eq_rel'",
@@ -146,11 +149,13 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b8a51dba3bdafed7c3669254f170f6de"
+      "eb5b4f07faa698cc92a83ebf0d355c8e"
     ],
     [
       "IMSTsub.eq_rel",
@@ -164,7 +169,7 @@
         "token_correspondence_IMSTsub.eq_rel_"
       ],
       0,
-      "e212e12b21948658d8efe67f8ab67807"
+      "6b5985ece07ef72f1ead4d9ab1306322"
     ]
   ]
 ]
